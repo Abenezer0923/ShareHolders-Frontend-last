@@ -29,8 +29,4 @@ The Shareholders Management System is a comprehensive solution designed to strea
 ![Communication Center]<img src="./public/zz3.png" >
 *Caption: Communication Center for seamless interaction between administrators and shareholders.*
 
-## Getting Started
 
-To set up and run the Shareholders Management System locally, follow these steps:
-
-1. **Clone the Repository:**
