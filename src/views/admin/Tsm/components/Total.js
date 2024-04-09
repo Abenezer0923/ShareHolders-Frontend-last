@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
+import axios from "axios";
 
 // Chakra imports
 import {
@@ -28,23 +29,99 @@ import {
   lineChartOptionsTotalSpent,
 } from "variables/charts";
 import contentData from "views/admin/default/variables/content.json";
-
 export default function TotalSpent(props) {
   const { ...rest } = props;
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [data, setData] = useState(null);
 
-  const handleNextClick = () => {
-    if (currentIndex < contentData.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
 
-  const handlePrevClick = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-  const percentage = 75;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = {
+          Authorization: `${token}`,
+        };
+
+        const response = await axios.get(
+           process.env.REACT_APP_API_URL,
+          { headers }
+        );
+
+        const apiData = response.data.data;
+        console.log("apis", apiData)
+        console.log("api total", apiData.shareCatagoryTotal)
+        let lists = []
+        for(let i = 0; i < (apiData.shareCatagoryTotal).length; i ++){
+          lists.push(apiData.shareCatagoryTotal[i]._id)
+        }
+        let idxOfOrdinary = lists.indexOf('ordinary')
+        let idxOfFranchis = lists.indexOf('franchise')
+        let idxOfTsm = lists.indexOf('tsm')
+        let valueOfTsm = 0
+        let valueOfOrdinary = 0
+        let valueOfFranchise = 0
+        if (idxOfOrdinary !== -1){
+          valueOfOrdinary = apiData.shareCatagoryTotal[idxOfOrdinary].total          
+        }
+        if( idxOfFranchis !== -1){
+          valueOfFranchise = apiData.shareCatagoryTotal[idxOfFranchis].total
+        }
+
+        if (idxOfTsm !== -1){
+          valueOfTsm = apiData.shareCatagoryTotal[idxOfTsm].total
+        }
+         
+        
+        console.log("Algo",lists)
+        const res = { obj: apiData.payment_history.slice(0, 3) };
+        const curr = {ans: apiData.completedShareInfo.slice(0,3)}
+        console.log("currr", curr)
+        
+        const franchiseData = {
+          
+          name: "Franchise",
+          growth: "buy",
+          value: `${valueOfFranchise}`,
+        };
+        const ordinaryData = {
+          name: "Ordinary",
+          growth: "buy",
+          value: `${valueOfOrdinary}`,
+        };
+        const tsmData = {
+          name: "TSM",
+          growth: "buy",
+          value: `${valueOfTsm}`,
+        };
+        const totalData = {
+          name: "Total",
+          value:
+            parseInt(franchiseData.value) +
+            parseInt(ordinaryData.value) +
+            parseInt(tsmData.value),
+        };
+
+        setData({
+          franchiseData,
+          ordinaryData,
+          tsmData,
+          totalData,
+          checkTableData: res.obj,
+          shareInfo: curr.ans
+          
+        });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [])
+
+
+ 
 
   // Chakra Color Mode
 
@@ -66,7 +143,8 @@ export default function TotalSpent(props) {
       justifyContent="center"
       align="center"
       direction="column"
-      w="100%"
+      w="50%"
+      h='200px'
       mb="0px"
       {...rest}
     >
@@ -78,13 +156,13 @@ export default function TotalSpent(props) {
         columns={{ base: 1, md: 2, lg: 3, xl: 2 }}
       >
         <Text
-          me="auto"
+          
           color={textColor}
-          fontSize="2xl"
-          fontWeight="700"
+          fontSize="xl"
+          fontWeight="100"
           lineHeight="100%"
         >
-          Total Amount of Share
+          Total Amount of <br /> Share
         </Text>
       </Flex>
       <Flex
@@ -93,8 +171,9 @@ export default function TotalSpent(props) {
         alignItems={{ base: "center", lg: "flex-start" }} // Center vertically on small screens, start on large screens
         mt={{ base: "2rem", lg: "5rem" }} // Adjust margin-top as needed
       >
+        {data ? (
         <Box
-          minH="260px"
+          minH="60px"
           minW={{ base: "100%", lg: "80%" }}
           mr={{ base: 0, lg: "2rem" }}
         >
@@ -104,9 +183,12 @@ export default function TotalSpent(props) {
             fontSize={{ base: "3xl", lg: "4xl" }}
             lineHeight="150%"
           >
-            15,000
+            {data.tsmData.value}
           </Text>
         </Box>
+      ) : (
+        <Text>Loading data...</Text>
+      )}
         
       </Flex>
    

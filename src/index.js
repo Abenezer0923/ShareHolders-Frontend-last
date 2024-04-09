@@ -6,15 +6,19 @@ import AuthLayout from 'layouts/auth';
 import AdminLayout from 'layouts/admin';
 import RtlLayout from 'layouts/rtl';
 import Detail from 'layouts/Certeficate';
+import Invoice from 'layouts/invoice'
+import Invoicess from 'layouts/Invoicess';
 import { ChakraProvider } from '@chakra-ui/react';
 import Otp from 'layouts/otp';
+import forgetPassword from 'layouts/forgetPassword';
+import resetPassword from 'layouts/resetPassword';
+import updatePassword from 'layouts/updatePassword';
+
 import theme from 'theme/theme';
 import { ThemeEditorProvider } from '@hypertheme-editor/chakra-ui';
 
 // Function to check if the user is authenticated
 const isAuthenticated = () => {
-  // Check if the user is logged in by inspecting your authentication state (e.g., checking for a token in localStorage)
-  // Replace the following condition with your authentication logic
   return !!localStorage.getItem('token');
 };
 
@@ -32,6 +36,10 @@ const ProtectedRoute = ({ component: Component, allowSignIn = false, ...rest }) 
   />
 );
 
+
+
+
+
 ReactDOM.render(
   <ChakraProvider theme={theme}>
     <React.StrictMode>
@@ -42,7 +50,13 @@ ReactDOM.render(
             <ProtectedRoute path="/admin" component={AdminLayout} />
             <ProtectedRoute path="/rtl" component={RtlLayout} />
             <ProtectedRoute path="/detail" component={Detail} />
+            <ProtectedRoute path="/invoice" component={Invoice} />
+            <ProtectedRoute  path="/invoicess" component={Invoicess} />
+           
             <ProtectedRoute path="/auth" component={Otp} allowSignIn={true} />
+            <ProtectedRoute path="/auth" component={forgetPassword} allowSignIn={true}/>
+            <ProtectedRoute path="/auth/resetPassword/:id/:token" component={resetPassword}   allowSignIn={true}/>
+            <ProtectedRoute path="/auth/updatePassword/:token" component={updatePassword}   allowSignIn={true}/>
             <Redirect from="/" to="/auth/sign-in" />
           </Switch>
         </BrowserRouter>
@@ -51,3 +65,5 @@ ReactDOM.render(
   </ChakraProvider>,
   document.getElementById('root')
 );
+
+

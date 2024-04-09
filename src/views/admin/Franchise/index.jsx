@@ -5,6 +5,8 @@ import {
     FormLabel,
     Icon,
     Text,
+    Spinner,
+
     Select,
     SimpleGrid,
     useColorModeValue,
@@ -44,6 +46,7 @@ import {
   export default function UserReports() {
 
     const [data, setData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Chakra Color Mode
     useEffect(() => {
@@ -55,7 +58,7 @@ import {
           };
   
           const response = await axios.get(
-            "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+             process.env.REACT_APP_API_URL,
             { headers }
           );
   
@@ -66,7 +69,7 @@ import {
           let agris = 0
           
           if (
-            apiData.currentShareInfo.shareCatagory === "franchise" &&
+            apiData.currentShareInfo?.shareCatagory === "franchise" &&
             apiData.currentShareInfo.shareType === "agri"
           ) {
             // Only update agris if the conditions are met
@@ -78,7 +81,7 @@ import {
           let ago = 0
 
           if (
-            apiData.currentShareInfo.shareCatagory === "franchise" &&
+            apiData.currentShareInfo?.shareCatagory === "franchise" &&
             apiData.currentShareInfo.shareType === "agro"
           ) {
             // Only update agris if the conditions are met
@@ -127,24 +130,48 @@ import {
           });
         } catch (error) {
           console.error("Error fetching data:", error);
+        }finally {
+          setIsLoading(false); // Set loading to false after fetching
         }
       };
   
       fetchData();
-    }, [data]); 
-
-  
-    if (!data) {
-      // Render loading state or return null
-      return null;
+    }, []); 
+    if (isLoading) {
+      // Render loading spinner
+      return (
+        <Flex
+          pt={{ base: "130px", md: "80px", xl: "80px" }}
+          height="100vh"
+          justify="center"
+          align="center"
+        >
+          <Spinner
+            color="teal.500"
+            thickness="4px" // Adjust thickness as needed
+            speed="0.65s" // Adjust speed as needed
+            emptyColor="gray.200" // Adjust empty color as needed
+            style={{ width: "4em", height: "4em" }} // Adjust width and height for larger size
+          />
+        </Flex>
+      );
     }
  
     return parseInt(data.franchiseData.value) === 0 ? (
-      <Box>
-        <Text color="#000" mt="12rem" fontSize="xxx-large">
-          You Don't Have Franchise Share !!
-        </Text>
-      </Box>
+      <Box
+      mt="12rem"
+      fontSize="xxx-large"
+      bg="#d7a022"
+      borderRadius="xl"
+      boxShadow="lg"
+      p="6"
+      textAlign="center"
+      color="white"
+      animate={{ y: [0, -20, 0] }}
+      transition={{ duration: 1, repeat: Infinity }}
+    >
+      coming soon....
+    </Box>
     ): (
       <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
         <SimpleGrid
@@ -176,7 +203,7 @@ import {
   
         <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px' mb='20px'>
           <Box>
-          <TotalSpent  mb='20px'/>
+          {/* <TotalSpent  mb='20px'/> */}
           <DevelopmentTable
           columnsData={columnsDataDevelopment}
           tableData={data.checkTableData}

@@ -7,26 +7,130 @@ import {
   SimpleGrid,
   TabPanel,
   TabPanels,
+  Flex,
+  Spinner,
   Text,
   Button,
   Image,
 } from "@chakra-ui/react";
 
-import React, { useState }  from "react";
+import React, { useState, useEffect }  from "react";
 import Card from "components/card/Card"; // Import your custom Card component
 import cc2 from "assets/img/CC2.jpg";
-import det from "views/admin/CereficateDetail";
 import { Link } from 'react-router-dom';
 import routes from "routes";
+import axios from "axios";
 import Templete from "views/admin/Templete";
 
 
 
 function MyTabs() {
   const [fixed] = useState(false);
+  const [data, setData] = useState(null);
   const [toggleSidebar, setToggleSidebar] = useState(false);
   const [dynamicRoutes, setDynamicRoutes] = useState(routes);
-  const [ress, SetRess] = useState(true)
+  const [ress, SetRess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = {
+          Authorization: `${token}`,
+        };
+
+        const response = await axios.get(
+          "http://localhost:2024/api/shareHolder/dashBoard",
+          { headers }
+        );
+
+        const apiData = response.data.data;
+        console.log("Heyy Abeniiiiii", apiData.shareHolderInfo._id)
+        let newPaymentOrder = apiData.newPayment_Order;
+        if(newPaymentOrder === null){
+          newPaymentOrder = false
+
+        }
+        console.log("this is newPaymentOrder", newPaymentOrder)
+        const isnewPaymentPending = newPaymentOrder.paymentStatus === "Pending" && newPaymentOrder.shareCatagory === "ordinary";
+
+      
+        let lists = apiData.shareCatagoryTotal.map((item) => item._id);
+        let idxOfOrdinary = lists.indexOf("ordinary");
+        let idxOfFranchis = lists.indexOf("franchise");
+        let idxOfTsm = lists.indexOf("tsm");
+        let valueOfOrdinary = 0;
+        let valueOfFranchise = 0;
+
+        if (idxOfOrdinary !== -1) {
+          valueOfOrdinary = apiData.shareCatagoryTotal[idxOfOrdinary].total;
+        }
+        if (idxOfFranchis !== -1) {
+          valueOfFranchise = apiData.shareCatagoryTotal[idxOfFranchis].total;
+        }
+
+        const res = { obj: apiData.payment_history.slice(0, 3) };
+        let currentShareInfo = null;
+        if (apiData.currentShareInfo !== null) {
+          currentShareInfo = apiData.currentShareInfo;
+        }
+
+        const shareHolderId = apiData.shareHolderInfo._id
+        // console({shareHolderId})
+
+        const curr = { ans: apiData.completedShareInfo.slice(0, 3) };
+        let shareType = null;
+        if (apiData.currentShareInfo !== null) {
+          shareType = apiData.currentShareInfo.shareCatagory;
+        }
+
+        const ordinaryData = {
+          name: "Ordinary",
+          growth: "buy",
+          value: `${valueOfOrdinary}`,
+        };
+
+        setData({
+          ordinaryData,
+          developmentTable: res.obj,
+          shareInfo: curr.ans,
+          shareType,
+          shareHolderId,
+          currentShareInfo,
+          // isnewPaymentPending,
+        });
+
+       
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Flex
+        pt={{ base: "130px", md: "80px", xl: "80px" }}
+        height="100vh"
+        justify="center"
+        align="center"
+      >
+        <Spinner
+          color="teal.500"
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          style={{ width: "4em", height: "4em" }}
+        />
+      </Flex>
+    );
+  }
 
   const addDynamicRoute = () => {
     // Check if the route is already added
@@ -45,10 +149,19 @@ function MyTabs() {
     }
   };
   return (
-    ress ? (<Box ml="10rem" mt="6rem">
-      <Text fontSize="2.5rem">
-        Coming Soon !!!!
-      </Text>
+    true ? (<Box
+      mt="12rem"
+      fontSize="xxx-large"
+      bg="#d7a022"
+      borderRadius="xl"
+      boxShadow="lg"
+      p="6"
+      textAlign="center"
+      color="white"
+      animate={{ y: [0, -20, 0] }}
+      transition={{ duration: 1, repeat: Infinity }}
+    >
+      coming soon....
     </Box>) : (<Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
     <ChakraProvider>
       <Box p={4}>
@@ -59,6 +172,7 @@ function MyTabs() {
             <Tab>Ordinary</Tab>
             <Tab>TSM</Tab>
           </TabList>
+          
           <TabPanels>
             <TabPanel>
               <SimpleGrid columns={[1, 2, 2, 4]} spacing={4}>

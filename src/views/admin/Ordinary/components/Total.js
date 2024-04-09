@@ -50,7 +50,7 @@ export default function TotalSpent(props) {
         };
 
         const response = await axios.get(
-          "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+           process.env.REACT_APP_API_URL,
           { headers }
         );
 

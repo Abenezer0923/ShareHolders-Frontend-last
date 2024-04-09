@@ -1,4 +1,5 @@
-import { mode } from "@chakra-ui/theme-tools";
+import { color } from "@chakra-ui/system";
+import { mode, whiten } from "@chakra-ui/theme-tools";
 export const globalStyles = {
   colors: {
     brand: {
@@ -82,7 +83,7 @@ export const globalStyles = {
     global: (props) => ({
       body: {
         overflowX: "hidden",
-        bg: mode("secondaryGray.300", "navy.900")(props),
+        bg: mode("#FDF1FF", "navy.900")(props),
         fontFamily: "DM Sans",
         letterSpacing: "-0.5px",
       },

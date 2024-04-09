@@ -1,27 +1,5 @@
-/*!
-  _   _  ___  ____  ___ ________  _   _   _   _ ___   
- | | | |/ _ \|  _ \|_ _|__  / _ \| \ | | | | | |_ _| 
- | |_| | | | | |_) || |  / / | | |  \| | | | | || | 
- |  _  | |_| |  _ < | | / /| |_| | |\  | | |_| || |
- |_| |_|\___/|_| \_\___/____\___/|_| \_|  \___/|___|
-                                                                                                                                                                                                                                                                                                                                       
-=========================================================
-* Horizon UI - v1.1.0
-=========================================================
 
-* Product Page: https://www.horizon-ui.com/
-* Copyright 2023 Horizon UI (https://www.horizon-ui.com/)
-
-* Designed and Coded by Simmmple
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-
-// Chakra imports
-import { Box, Grid } from "@chakra-ui/react";
+import { Box, Grid, Flex, Spinner } from "@chakra-ui/react";
 
 // Custom components
 import Banner from "views/admin/profile/components/Banner";
@@ -41,6 +19,7 @@ import avatar from "assets/img/avatars/avatar4.png";
 
 export default function Overview() {
   const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,7 +30,7 @@ export default function Overview() {
         };
 
         const response = await axios.get(
-          "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+           process.env.REACT_APP_API_URL,
           { headers }
         );
 
@@ -98,15 +77,32 @@ export default function Overview() {
         });
       } catch (error) {
         console.error("Error fetching data:", error);
+      }finally {
+        setIsLoading(false); // Set loading to false after fetching
       }
     };
 
     fetchData();
   }, []); // Empty dependency array to ensure the effect runs only once
 
-  if (!data) {
-    // Render loading state or return null
-    return null;
+  if (isLoading) {
+    // Render loading spinner
+    return (
+      <Flex
+        pt={{ base: "130px", md: "80px", xl: "80px" }}
+        height="100vh"
+        justify="center"
+        align="center"
+      >
+        <Spinner
+          color="teal.500"
+          thickness="4px" // Adjust thickness as needed
+          speed="0.65s" // Adjust speed as needed
+          emptyColor="gray.200" // Adjust empty color as needed
+          style={{ width: "4em", height: "4em" }} // Adjust width and height for larger size
+        />
+      </Flex>
+    );
   }
   console.log("name", data.info.first_name )
   return (

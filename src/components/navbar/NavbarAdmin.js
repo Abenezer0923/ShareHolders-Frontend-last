@@ -64,7 +64,7 @@ export default function AdminNavbar(props) {
         };
 
         const response = await axios.get(
-          "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+          "http://localhost:2024/api/shareHolder/dashBoard",
           { headers }
         );
 
@@ -177,8 +177,8 @@ export default function AdminNavbar(props) {
       >
         <Box mb={{ sm: "8px", md: "0px" }}>
           <Breadcrumb>
-            <BreadcrumbItem color={secondaryText} fontSize="sm" mb="5px">
-              <BreadcrumbLink href="#" color={secondaryText}>
+            <BreadcrumbItem color={secondaryText} fontSize="lg" mb="5px">
+              <BreadcrumbLink href="#" color="#d7a022">
                 Welcome - {data.info.first_name}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -209,19 +209,7 @@ export default function AdminNavbar(props) {
 						{brandText}
 					</Link> */}
         </Box>
-        <Box
-          w={{ sm: "100%", md: "auto" }}
-          ml={{ base: "0", md: "2rem" }}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <SearchBar
-            mb={secondary ? { base: "10px", md: "unset" } : "unset"}
-            me={{ base: "0", md: "10px" }}
-            borderRadius="30px"
-          />
-        </Box>
+     
 
         <Box ms="auto" w={{ sm: "100%", md: "unset" }}>
           <AdminNavbarLinks

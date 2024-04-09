@@ -33,21 +33,18 @@ export const columnsWhat = [
 ]
 export const columnsDataCheck = [
   {
-    Header: "NAME",
-    accessor: "name",
+    Header: "PAYMENTMETHOD",
+    accessor: "paymentMethod",
   },
   {
-    Header: "PROGRESS",
-    accessor: "progress",
-  },
-  {
-    Header: "QUANTITY",
-    accessor: "quantity",
-  },
+    Header: "PAIDAMOUNT",
+    accessor: "paidAmount",
+  }
+,  
   {
     Header: "DATE",
-    accessor: "date",
-  },
+    accessor: "updatedAt",
+  }
 ];
 
 export const columnsDataColumns = [

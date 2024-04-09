@@ -125,7 +125,7 @@ const CheckTable = (props) => {
         };
 
         const response = await axios.get(
-          "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+           process.env.REACT_APP_API_URL,
           { headers }
         );
 
@@ -267,7 +267,7 @@ const CheckTable = (props) => {
       {/* Updated Modal */}
       {selectedRow && (
         <Modal
-          isOpen={!!selectedRow}
+          // isOpen={!!selectedRow}
           onClose={() => {
             setSelectedRow(null);
             setShouldPrint(false);

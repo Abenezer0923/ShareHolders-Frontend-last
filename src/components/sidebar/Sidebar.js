@@ -28,7 +28,7 @@ import { IoMenuOutline } from "react-icons/io5";
 
 function Sidebar(props) {
   const { routes } = props;
-  const filteredRoutes = routes.filter((route) => !(route.layout === "/admin" && route.path === "/templete"));
+  const filteredRoutes = routes.filter((route) =>(route.layout === "/admin"));
 
   let variantChange = "0.2s linear";
   let shadow = useColorModeValue(
@@ -52,7 +52,7 @@ function Sidebar(props) {
         overflowX='hidden'
         boxShadow={shadow}>
         <Scrollbars
-          autoHide
+          // autoHide
           renderTrackVertical={renderTrack}
           renderThumbVertical={renderThumb}
           renderView={renderView}>
@@ -66,12 +66,19 @@ function Sidebar(props) {
 // FUNCTIONS
 export function SidebarResponsive(props) {
   let sidebarBackgroundColor = useColorModeValue("white", "navy.800");
+
   let menuColor = useColorModeValue("gray.400", "white");
   // // SIDEBAR
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef();
 
   const { routes } = props;
+  const filteredRoutes = routes.filter((route) =>
+  (route.layout === "/admin") &&
+  route.path !== "/templete" &&
+  route.path !== "/invoicess" &&
+  route.path !== "/invoice" 
+);
   // let isWindows = navigator.platform.startsWith("Win");
   //  BRAND
  
@@ -104,11 +111,11 @@ export function SidebarResponsive(props) {
           />
           <DrawerBody maxW='285px' px='0rem' pb='0'>
             <Scrollbars
-              autoHide
+              // autoHide
               renderTrackVertical={renderTrack}
               renderThumbVertical={renderThumb}
               renderView={renderView}>
-              <Content routes={routes} />
+              <Content routes={filteredRoutes} />
             </Scrollbars>
           </DrawerBody>
         </DrawerContent>

@@ -1,110 +1,103 @@
 import React, { useState } from "react";
 import {
   Box,
-  Flex,
-  Image,
-  Link,
-  Text,
   Button,
-  useColorModeValue,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  Text
 } from "@chakra-ui/react";
-import Card from "components/card/Card.js";
+import { FaYoutube } from "react-icons/fa";
 
 export default function NFT(props) {
-  const {
-    video,
-    name,
-    author,
-    bidders,
-    download,
-    currentbid,
-    width, // Add width prop
-    height, // Add height prop
-  } = props;
-  const [like, setLike] = useState(false);
-  const textColor = useColorModeValue("navy.700", "white");
+  const { video, width, height } = props; // Define width and height props
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isIconRotated, setIsIconRotated] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const toggleRotation = () => {
+    setIsIconRotated(!isIconRotated);
+  };
 
   return (
-    <Card p='20px'>
-      <Flex direction={{ base: "column" }} justify='center' align='center' borderRadius='20px'  overflow='hidden'  >
-        <Box mb={{ base: "20px", "2xl": "20px" }} position='relative' borderRadius='20px'>
-          {/* Use the provided width and height props */}
+    <>
+      <Box
+        style={{ cursor: "pointer" }}
+        borderRadius="20px"
+        overflow="hidden"
+        boxShadow="xl"
+        transition="all 0.3s ease-in-out"
+        _hover={{
+          transform: "scale(1.05)",
+          boxShadow: "xl",
+        }}
+        p="20px"
+        height="300px"
+        textAlign="center"
+        fontSize="24px"
+        fontWeight="bold"
+        color="#ffff"
+        position="relative" // Add position relative to allow absolute positioning of the icon
+      >
+        <div
+          onClick={openModal}
+          style={{ position: "relative", width: "100%", height: "100%" }}
+        >
           <iframe
-            width={width || "286"} // Set width, default to 686 if not provided
-            height={height || "300"}
-            borderRadius='20px' // Set height, default to 386 if not provided
+            width={width || "100%"}
+            height={height || "100%"}
             src={video}
-            title={name}
-          
-            
+            style={{
+              pointerEvents: "none", // Disable pointer events for iframe
+              position: "absolute",
+              top: "0",
+              left: "0",
+              width: "100%",
+              height: "100%",
+            }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           ></iframe>
-        </Box>
-        <Flex flexDirection='column' justify='space-between' h='100%'>
-          <Flex
-            justify='space-between'
-            direction={{
-              base: "row",
-              md: "column",
-              lg: "row",
-              xl: "column",
-              "2xl": "row",
+          <FaYoutube
+            size="3em"
+            color="#d7a022"
+            mb="1em"
+            onClick={toggleRotation}
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: "1",
             }}
-            mb='auto'>
-            <Flex direction='column'>
-              <Text
-                color={textColor}
-                fontSize={{
-                  base: "xl",
-                  md: "lg",
-                  lg: "lg",
-                  xl: "lg",
-                  "2xl": "md",
-                  "3xl": "lg",
-                }}
-                mb='5px'
-                fontWeight='bold'
-                me='14px'>
-                Purpose BlackETH
-              </Text>
-              
-            </Flex>
-          </Flex>
-          <Flex
-            align='start'
-            justify='space-between'
-            direction={{
-              base: "row",
-              md: "column",
-              lg: "row",
-              xl: "column",
-              "2xl": "row",
-            }}
-            mt='25px'>
-            <Link
-              href={download}
-              mt={{
-                base: "0px",
-                md: "10px",
-                lg: "0px",
-                xl: "10px",
-                "2xl": "0px",
-              }}>
-              {/* <Button
-                backgroundColor='#d7a022'
-                color='white'
-                fontSize='sm'
-                fontWeight='500'
-                borderRadius='70px'
-                px='24px'
-                py='5px'>
-                Place Bid
-              </Button> */}
-            </Link>
-          </Flex>
-        </Flex>
-      </Flex>
-    </Card>
+            transition="transform 0.3s ease-in-out"
+            _hover={{ cursor: "pointer" }}
+          />
+        </div>
+      </Box>
+
+      {/* Modal */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} size="2xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Latest video</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <iframe
+              width="100%"
+              height="400"
+              src={video}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </>
   );
 }

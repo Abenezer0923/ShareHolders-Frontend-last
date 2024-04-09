@@ -1,357 +1,478 @@
-import React, { useState } from "react";
-
-// Chakra imports
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
   Flex,
-  Icon,
-  Collapse,
   Text,
   Input,
-  Popover,
+  InputGroup,
+  InputRightElement,
   Link,
-  PopoverArrow,
-  PopoverTrigger,
-  PopoverHeader,
-  Checkbox,
-  ListItem,
-  PopoverCloseButton,
-  PopoverBody,
-  PopoverContent,
   RadioGroup,
-  List,
   VStack,
   Radio,
   useColorModeValue,
+  Popover,
+  PopoverArrow,
+  PopoverTrigger,
+  PopoverHeader,
+  PopoverCloseButton,
+  useDisclosure,
+  PopoverBody,
+  PopoverContent,
+  ListItem,
+  List,
+  Spinner,
 } from "@chakra-ui/react";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+
+import Card from "components/card/Card.js";
+import {
+  FiChevronRight,
+  FiUpload,
+  FiCheckCircle,
+  FiXCircle,
+  FiCamera,
+} from "react-icons/fi";
 
 import p1 from "assets/img/Untitled-removebg-preview.png";
 import p2 from "assets/img/tele.png";
 import p3 from "assets/img/Paypal.png";
 import p4 from "assets/img/visa.jpeg";
 
-// Custom components
-import Card from "components/card/Card.js";
-import LineChart from "components/charts/LineChart";
-
-import { HSeparator } from "components/separator/Separator.jsx";
-import {
-  IoCheckmarkCircle,
-  IoArrowBack,
-  IoArrowForward,
-} from "react-icons/io5";
-import { MdBarChart, MdOutlineCalendarToday } from "react-icons/md";
-// Assets
-import { RiArrowUpSFill } from "react-icons/ri";
-import {
-  lineChartDataTotalSpent,
-  lineChartOptionsTotalSpent,
-} from "variables/charts";
-import contentData from "views/admin/default/variables/content.json";
-import { FiChevronDown, FiChevronRight } from "react-icons/fi";
-
 export default function TotalSpent(props) {
-  const { ...rest } = props;
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedPercentage, setSelectedPercentage] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("creditCard");
-  const [options, setOptions] = useState(["Abyssiniya", "СВЕ", "Awash"]);
-  const [popoverHeader, setPopoverHeader] = useState("Options");
+  const [paymentMethod, setPaymentMethod] = useState("bankTransfer");
+  const [dynamicOptions, setDynamicOptions] = useState([]);
+  const [buttonPersent, setButtonPersent] = useState("");
+  const [birr, setBirr] = useState("");
+  const [calculatedAmount, setCalculatedAmount] = useState(null);
+  const [popoverHeaders, setPopoverHeader] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [paymentId, setPaymentId] = useState(null);
+  const [shareHolderId, setShareHolderId] = useState(null);
+  const [Persentagess, setThePersentage] = useState(null);
+  const [uploadImage, setUploadImage] = useState(null);
+  const [paymentOrders, setPaymentOrders] = useState([]);
+  const [paymentOrderStatus, setpaymentOrderStatus] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [shareCatagoryType, setshareCatagoryType] = useState("");
+
+  const [uploadProgress, setUploadProgress] = useState(0); // Define uploadProgress
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isPaymentPending, setIsPaymentPending] = useState(false);
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = {
+          Authorization: `${token}`,
+          "Content-Type": "multipart/form-data", // Adding the Content-Type header
+        };
+
+        const response = await axios.get(
+           process.env.REACT_APP_API_URL,
+          { headers }
+        );
+
+        const apiData = response.data.data;
+        const thePersentage = apiData.currentPayment.percentage;
+        const PaymentOrders = apiData.payment_Order;
+        const havePaymentOrders = apiData.payment_Order;
+        const paymentStatuss = havePaymentOrders ? havePaymentOrders.paymentStatus : null;
+        const shareCatagorys = havePaymentOrders ? havePaymentOrders.shareCatagory : null;
+        setPaymentOrders(havePaymentOrders);
+        setpaymentOrderStatus(paymentStatuss);
+        setshareCatagoryType(shareCatagorys);
+
+        const percentage = parseInt(apiData.currentPayment.percentage);
+        const amount = apiData.currentPayment.amountPaid;
+        setSelectedPercentage(percentage);
+        const remainingPercentage = 100 - percentage;
+        const theIDss = apiData.currentPayment._id;
+        const shareId = apiData.shareHolderInfo._id;
+        setPaymentId(theIDss);
+        setShareHolderId(shareId);
+        setThePersentage(thePersentage);
+
+        const options = [];
+        for (let i = 25; i <= remainingPercentage; i += 25) {
+          options.push({ value: i, label: `${i}%`, amount: amount });
+        }
+        setDynamicOptions(options);
+
+        // Check if there are any pending payments for "Tsm" category
+        const isPaymentPending = PaymentOrders.some(order => order.shareCatagory === "tsm" && order.paymentStatus === "Pending");
+        setIsPaymentPending(isPaymentPending);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      console.error("No file selected");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", selectedFile);
+
+    const config = {
+      onUploadProgress: (progressEvent) => {
+        const progress = Math.round(
+          (progressEvent.loaded / progressEvent.total) * 100
+        );
+        setUploadProgress(progress);
+      },
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "http://localhost:2024/api/orderPayment/bankPayment",
+        formData,
+        {
+          headers: {
+            Authorization: `${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+          ...config,
+        }
+      );
+      console.log("Upload successful:", response.data);
+      console.log("to see the image", response.data);
+      setUploadedImage(response.data.imageUrl);
+      setUploadSuccess(true);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+  };
+
+  const handlePercentageSelection = (percentage, amount) => {
+    const Totalres = amount * 100;
+    const res = (percentage / 100) * Totalres;
+    setCalculatedAmount(res);
+  };
 
   const handlePaymentMethodChange = (value) => {
     setPaymentMethod(value);
-
-    // Reset options and header when changing payment method
-    setOptions(["Abyssiniya", "СВЕ", "Awash"]);
-    setPopoverHeader("Options");
   };
 
   const handleOptionClick = (option) => {
-    // Update only the header when an option is clicked
     setPopoverHeader(option);
   };
 
-  const handleUpdateOptions = () => {
-    // Update options and header when the button is clicked
-    setOptions(["New  1", "New Option 2", "New Option 3"]);
-    setPopoverHeader("Updated Options");
+  const handleAccountNumberChange = (event) => {
+    console.log("the Acc num is", event.target.value);
+    setAccountNumber(event.target.value);
   };
 
-  const percentage = 75;
+  const handlePayButtonClick = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("acc_No", accountNumber);
+      formData.append("percentage", buttonPersent);
+      formData.append("amount_birr", calculatedAmount);
+      formData.append("image", selectedFile);
+      formData.append("paymentMethod", popoverHeaders);
+      formData.append("payment_id", paymentId);
+      formData.append("shareHolder_id", shareHolderId);
+      formData.append("paymentStatus", "Pending");
+      formData.append("shareCatagory", "tsm");
 
-  const handleButtonClick = () => {
-    setIsExpanded(!isExpanded);
-  };
-  const handleBackButtonClick = () => {
-    setIsExpanded(false);
+      const responseFromBack = await axios.post(
+        "http://localhost:2024/api/orderPayment/bankPayment",
+        formData,
+        {
+          headers: {
+            Authorization: `${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Response from backend:", responseFromBack.data);
+      setpaymentOrderStatus("Pending");
+      setIsPaymentPending(true); // Set the payment as pending
+    } catch (error) {
+      console.error("Error while sending data:", error);
+    }
   };
 
   // Chakra Color Mode
-
   const textColor = useColorModeValue("secondaryGray.900", "white");
-  const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
   const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
-  const iconColor = useColorModeValue("brand.500", "white");
-  const bgButton = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
-  const bgHover = useColorModeValue(
-    { bg: "secondaryGray.400" },
-    { bg: "whiteAlpha.50" }
-  );
-  const bgFocus = useColorModeValue(
-    { bg: "secondaryGray.300" },
-    { bg: "whiteAlpha.100" }
-  );
+
   return (
     <Card
       justifyContent="center"
       align="center"
       direction="column"
-      w="100%"
-      mb="0px"
-      {...rest}
+      w={{ base: "90%", md: "80%", lg: "70%", xl: "80%" }}
+      p={{ base: "20px", md: "40px" }}
     >
-      <Flex
-        justify="space-between"
-        ps="0px"
-        pe="20px"
-        pt="5px"
-        columns={{ base: 1, md: 2, lg: 3, xl: 2 }}
-      >
-        <Text
-          me="auto"
-          color={textColor}
-          fontSize="xl"
-          fontWeight="700"
-          lineHeight="100%"
-        >
-          Ordinary
-        </Text>
-      </Flex>
-      <Flex
-        w="100%"
-        flexDirection={{ base: "column", lg: "row" }}
-        alignItems={{ base: "center", lg: "flex-start" }}
-        mt={{ base: "2rem", lg: "5rem" }}
-      >
-        <Box
-          minH="260px"
-          minW={{ base: "100%", lg: "60%" }}
-          mr={{ base: 0, lg: "2rem" }}
-        >
-          <Text
-            color={textColor}
-            fontWeight="bold"
-            fontSize={{ base: "3xl", lg: "4xl" }}
-            lineHeight="150%"
-          >
-            Please Complete
-            <br />
-            Remaining Payment!
-            <br />
-          </Text>
-        </Box>
-        <Box
-          style={{
-            width: "100%",
-            maxWidth: 200,
-            paddingRight: "50px",
-            marginBottom: "10rem",
-          }}
-        >
-          <CircularProgressbar value={percentage} text={`${percentage}%`} />
-        </Box>
-      </Flex>
-      <Button
-        bg={boxBg}
-        fontSize="sm"
-        fontWeight="500"
-        color={textColorSecondary}
-        borderRadius="7px"
-        onClick={handleButtonClick}
-        display={isExpanded ? "none" : "block"}
-        mt={{ base: "4", lg: "0" }}
-      >
-        Continue
-      </Button>
-      <Collapse in={isExpanded}>
-        <Box mt={{ base: "4", lg: "4" }}>
-          <Box w={{ base: "100%", lg: "150px" }} mr={{ base: "0", lg: "30rem" }}>
-            <Input ml={{ base: "6", lg: "6" }} mb={2} placeholder="Money" />
-          </Box>
-          <Box mt="2rem">
-            <Flex
-              direction={{ base: "row", lg: "row" }}
-              justify="space-between"
-              ml={{ base: "0", lg: "0px" }}
-              w="100%"
-            >
-              {/* Option 1 */}
-              <Link href="#" _hover={{ textDecor: "none" }}>
-                <Text>
-                  <Checkbox />
-                  <strong>25%</strong>
-                </Text>
-              </Link>
-
-              {/* Option 2 */}
-              <Link href="#" _hover={{ textDecor: "none" }}>
-                <Text mb={1}>
-                  <Checkbox />
-                  <strong>50%</strong>
-                </Text>
-              </Link>
-
-              {/* Option 3 */}
-              <Link href="" _hover={{ textDecor: "none" }}>
-                <Text mb={1}>
-                  <Checkbox />
-                  <strong>75%</strong>
-                </Text>
-              </Link>
-            </Flex>
-          </Box>
-          <Flex
-            direction={{ base: "column", lg: "row" }}
-            justify="space-between"
-            ps="0px"
-            pe="20px"
-            pt="5px"
-          >
+      {isPaymentPending ? (
+        <Text color="#d7a022" fontSize="2xl">The Payment is Pending...</Text>
+      ) : (
+        <>
+          <Flex justify="space-between" width="100%">
             <Text
-              me="auto"
-              ml={{ base: "2rem", lg: "2rem" }}
               color={textColor}
-              fontSize="xl"
-              fontWeight="700"
+              fontSize={{ base: "xl", md: "2xl" }}
+              fontWeight="bold"
               lineHeight="100%"
             >
-              Payment
+              Tsm
             </Text>
           </Flex>
           <Flex
-            direction={{ base: "column", lg: "row" }}
-            mt={{ base: "3rem", lg: "3rem" }}
-            ml={{ base: "0", lg: "9rem" }}
+            w="100%"
+            flexDirection={{ base: "column", lg: "row" }}
+            alignItems={{ base: "center", lg: "flex-start" }}
+            mt={{ base: "2rem", lg: "4rem" }}
           >
-            <RadioGroup
-              value={paymentMethod}
-              onChange={handlePaymentMethodChange}
+            <Box
+              minH="160px"
+              minW={{ base: "100%", lg: "30%" }}
+              mr={{ base: 0, lg: "3rem" }}
             >
-              <VStack align={{ base: "start", lg: "stretch" }} spacing={4}>
-                <Flex direction={{ base: "column", lg: "row" }}>
-                  <Radio value="creditCard">Credit Card</Radio>
-                  <Radio value="bankTransfer" ml={{ base: "0", lg: "2rem" }}>
-                    Bank Transfer
-                  </Radio>
-                </Flex>
-              </VStack>
-            </RadioGroup>
+              <Text
+                color={textColor}
+                fontWeight="bold"
+                fontSize={{ base: "xl", lg: "xl" }}
+                lineHeight="100%"
+              >
+                Please Complete
+                <br />
+                Remaining Payment!
+                <br />
+              </Text>
+            </Box>
+            <Box
+              style={{
+                width: "70%",
+                maxWidth: 200,
+                paddingRight: "0px",
+                marginBottom: "5rem",
+                color: "#d7a022",
+              }}
+            >
+              <CircularProgressbar
+                styles={{
+                  path: { stroke: "#d7a022" },
+                  text: { fill: "#d7a022" },
+                }}
+                value={selectedPercentage}
+                text={`${selectedPercentage}%`}
+              />
+            </Box>
           </Flex>
-          {paymentMethod === "creditCard" && (
-            <Flex justify="space-between" p={4}>
-              {/* Image 1 */}
-              <Link href="" _hover={{ textDecor: "none" }}>
-                <Box
-                  as="img"
-                  src={p1}
-                  alt="Image 1"
-                  boxSize="100px"
-                  objectFit="cover"
-                  borderRadius="md"
-                  cursor="pointer"
-                />
-              </Link>
-
-              {/* Image 2 */}
-              <Link href="#" _hover={{ textDecor: "none" }}>
-                <Box
-                  as="img"
-                  src={p2}
-                  alt="Image 2"
-                  boxSize="100px"
-                  objectFit="cover"
-                  borderRadius="md"
-                  cursor="pointer"
-                />
-              </Link>
-
-              {/* Image 3 */}
-              <Link href="#" _hover={{ textDecor: "none" }}>
-                <Box
-                  as="img"
-                  src={p3}
-                  alt="Image 3"
-                  boxSize="100px"
-                  objectFit="cover"
-                  borderRadius="md"
-                  cursor="pointer"
-                />
-              </Link>
-
-              {/* Image 4 */}
-              <Link href="" _hover={{ textDecor: "none" }}>
-                <Box
-                  as="img"
-                  src={p4}
-                  alt="Image 4"
-                  boxSize="100px"
-                  objectFit="cover"
-                  borderRadius="md"
-                  cursor="pointer"
-                />
-              </Link>
+          <Button
+            bg={boxBg}
+            fontSize="lg"
+            fontWeight="bold"
+            color="#ffff"
+            backgroundColor="#d7a022"
+            borderRadius="7px"
+            onClick={() => setIsExpanded(!isExpanded)}
+            display={isExpanded ? "none" : "block"}
+            mt={{ base: "4", lg: "0" }}
+          >
+            Continue
+          </Button>
+          <Box display={isExpanded ? "block" : "none"}>
+            {/* Form components go here */}
+            <Flex direction="column" mt="2rem">
+              <Text fontSize="lg">Choose Percentage:</Text>
+              <Flex direction="row">
+                {dynamicOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={
+                      selectedPercentage === option.value ? "solid" : "outline"
+                    }
+                    colorScheme="blue"
+                    onClick={() => {
+                      handlePercentageSelection(option.value, option.amount);
+                      setButtonPersent(option.label);
+                    }}
+                    mr={2}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </Flex>
+              <Flex>
+                {calculatedAmount && (
+                  <Text fontSize="lg" mt={4}>
+                    Calculated amount: {calculatedAmount} birr
+                  </Text>
+                )}
+              </Flex>
             </Flex>
-          )}
-          {paymentMethod === "bankTransfer" && (
-            <>
-              <Button mt="4" rightIcon={<Icon as={FiChevronRight} />}>
-                Select Bank
+            <Flex
+              direction={{ base: "column", lg: "row" }}
+              justify="space-between"
+              ps="0px"
+              pe="20px"
+              pt="5px"
+              mr="2rem"
+            >
+              <Text
+                me="auto"
+                ml={{ base: "2rem", lg: "2rem" }}
+                color={textColor}
+                fontSize="xl"
+                fontWeight="700"
+                lineHeight="100%"
+              >
+                Payment
+              </Text>
+            </Flex>
+            <Flex
+              direction={{ base: "column", lg: "row" }}
+              mt={{ base: "3rem", lg: "1rem" }}
+              ml={{ base: "0", lg: "4rem" }}
+            >
+              <RadioGroup
+                value={paymentMethod}
+                onChange={handlePaymentMethodChange}
+              >
+                <VStack align={{ base: "start", lg: "stretch" }} spacing={4}>
+                  <Flex direction={{ base: "column", lg: "row" }}>
+                    <Radio
+                      value="bankTransfer"
+                      ml={{ base: "0", lg: "2rem" }}
+                      fontSize="lg"
+                    >
+                      Bank Transfer
+                    </Radio>
+                  </Flex>
+                </VStack>
+              </RadioGroup>
+            </Flex>
+            {paymentMethod === "bankTransfer" && (
+              <>
+                <Button
+                  mt="4"
+                  fontSize="lg"
+                  rightIcon={<FiChevronRight />}
+                  onClick={onOpen}
+                >
+                  Select Bank
+                </Button>
+
+                <Popover isOpen={isOpen} onClose={onClose}>
+                  <PopoverTrigger>
+                    <Button mt="4" fontSize="lg">
+                      {popoverHeaders}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader>Options</PopoverHeader>
+                    <PopoverBody>
+                      <List spacing={3}>
+                        {["Abyssiniya", "СВЕ", "Awash"].map((option, index) => (
+                          <ListItem
+                            key={index}
+                            onClick={() => handleOptionClick(option)}
+                            _hover={{ background: "gray.100", cursor: "pointer" }}
+                            borderRadius="md"
+                            px={3}
+                            py={2}
+                          >
+                            <Text fontSize="lg">{option}</Text>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+
+                <Box w={{ base: "100%", lg: "250px" }} mr="0rem">
+                  <Input
+                    ml={{ base: "6", lg: "6" }}
+                    mb={2}
+                    fontSize="lg"
+                    placeholder="Enter account number"
+                    value={accountNumber}
+                    onChange={handleAccountNumberChange}
+                  />
+                </Box>
+              </>
+            )}
+
+            <Flex>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+                id="upload"
+              />
+              <label htmlFor="upload">
+                <Button
+                  bg="blue.200"
+                  fontSize="sm"
+                  as="span"
+                  leftIcon={<FiCamera />}
+                >
+                  Upload Image
+                </Button>
+              </label>
+              {uploadProgress > 0 && <div>Progress: {uploadProgress}%</div>}
+              {selectedFile && <div>Selected File: {selectedFile.name}</div>}
+              {selectedFile && (
+                <img
+                  src={selectedFile}
+                  alt="Uploaded"
+                  style={{ maxWidth: "100px" }}
+                />
+              )}
+            </Flex>
+
+            <Flex mt={{ base: "2rem", lg: "1rem" }}>
+              <Button
+                onClick={() => setIsExpanded(false)}
+                w={{ base: "100%", lg: "150px" }}
+                color="#ffff"
+                backgroundColor="#d7a022"
+                fontSize="lg"
+              >
+                Back
               </Button>
-
-              <Popover>
-                <PopoverTrigger>
-                  <Button mt="4">{popoverHeader}</Button>
-                </PopoverTrigger>
-                <PopoverContent>
-                  <PopoverArrow />
-                  <PopoverCloseButton />
-                  <PopoverHeader>Options</PopoverHeader>
-                  <PopoverBody>
-                    <List>
-                      {options.map((option, index) => (
-                        <ListItem
-                          key={index}
-                          onClick={() => handleOptionClick(option)}
-                        >
-                          <Button>{option}</Button>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </PopoverBody>
-                </PopoverContent>
-              </Popover>
-
-              <Box w={{ base: "100%", lg: "350px" }} mr="0rem">
-                <Input ml={{ base: "6", lg: "6" }} mb={2} placeholder="Enter account number" />
-              </Box>
-            </>
-          )}
-
-          <Flex ml={{ base: "0", lg: "15rem" }}>
-            <Button background={"blue.400"}>Upload Receipt</Button>
-            <Button>no file selected</Button>
-          </Flex>
-          <Flex ml={{ base: "0", lg: "15rem" }} mt={{ base: "5rem", lg: "5rem" }}>
-            <Button onClick={handleBackButtonClick} w={{ base: "100%", lg: "150px" }}>
-              Back
-            </Button>
-            <Button w={{ base: "100%", lg: "150px" }}>Pay</Button>
-          </Flex>
-        </Box>
-      </Collapse>
+              <Button
+                ml="1rem"
+                w={{ base: "100%", lg: "150px" }}
+                color="#ffff"
+                backgroundColor="#d7a022"
+                fontSize="lg"
+                onClick={handlePayButtonClick}
+              >
+                Pay
+              </Button>
+            </Flex>
+          </Box>
+        </>
+      )}
     </Card>
   );
 }

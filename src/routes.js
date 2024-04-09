@@ -23,9 +23,16 @@ import Ordinary from "views/admin/Ordinary";
 import Tsm from "views/admin/Tsm";
 import Certeficate from "views/admin/Certeficate";
 import Templete from "views/admin/Templete";
+import Invoice from "views/admin/invoice"
+import ForgetPassword from "views/auth/forgetPassword";
+import CheakText from "views/auth/sendEmail";
+import Invoices from "views/admin/Invoices"
 // Auth Imports
 import SignInCentered from "views/auth/signIn";
 import Otp from "views/auth/otp"
+import ResetPassword from "views/auth/resetPassword";
+import UpdatePassword from "views/auth/updatePassword";
+
 
 const routes = [
   {
@@ -35,6 +42,7 @@ const routes = [
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: MainDashboard,
   },
+ 
   // {
   //   name: "Transactions",
   //   layout: "/admin",
@@ -139,12 +147,40 @@ const routes = [
     secondary: true,
   },
   {
+    name: "ResetPassword",
+    layout:'/auth',
+    path: "/resetPassword/:id/:token",
+    icon: <Icon as={MdLock} width='20px' height='20px' color='inherit' />,
+    component: ResetPassword,
+  },
+  {
+    name: "Update Password",
+    layout: "/auth",
+    path: "/updatePassword",
+    icon: <Icon as={MdKey} width="20px" height="20px" color="inherit" />,
+    component: UpdatePassword,
+  },
+  {
     name: "Settings",
     layout: "/admin",
     path: "/profile",
     icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
     component: Profile,
-  },
+  },  
+  {
+    name: "ForgetPassword",
+    layout:"/auth",
+    path:"/forgetPassword",
+    icon: <Icon as={MdLock} width='20px' height='20px' color='inherit' />,
+    component: ForgetPassword,
+ },
+ {
+  name: "CheakText",
+  layout:"/auth",
+  path:"/cheakEmail",
+  icon: <Icon as={MdLock} width='20px' height='20px' color='inherit' />,
+  component: CheakText,
+},
   {
     name: "Sign In",
     layout: "/auth",
@@ -173,7 +209,27 @@ const routes = [
     component: Templete,
     hidden: true,
   },
+  {
+    layout: "/admin",
+    path: "/invoice",
+    component: Invoice,
+    hidden: true,
+  },{
+    layout: "/admin",
+    path: "/invoicess",
+    component: Invoices,
+    hidden: true,
+  },
 
 ];
 
+
+const invoiceRoute = routes.find((route) => route.component === Invoice);
+
+if (invoiceRoute) {
+  const invoicePath = invoiceRoute.path;
+  console.log("Invoice Path:", invoicePath);
+} else {
+  console.log("Invoice component not found in routes.");
+}
 export default routes;

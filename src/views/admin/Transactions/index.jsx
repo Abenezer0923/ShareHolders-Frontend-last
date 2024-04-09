@@ -1,8 +1,6 @@
-
 // Chakra imports
-import { Box, SimpleGrid, Button } from "@chakra-ui/react";
+import { Box, SimpleGrid, Flex, Spinner } from "@chakra-ui/react";
 import DevelopmentTable from "views/admin/Transactions/components/DevelopmentTable";
-
 
 import {
   columnsDataDevelopment,
@@ -16,6 +14,7 @@ import axios from "axios";
 
 export default function Settings() {
   const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,49 +25,65 @@ export default function Settings() {
         };
 
         const response = await axios.get(
-          "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+          process.env.REACT_APP_API_URL,
           { headers }
         );
 
         const apiData = response.data.data;
-        console.log("tr", apiData)
-        const res = { obj: apiData.payment_history.slice(0, 9) };
-        console.log("trlog", res)
-    
+        console.log("tr", apiData);
+        const res = { obj: apiData.payment_history };
+        const testing = { obj: apiData.payment_history };
+        console.log("testing", testing);
 
         setData({
-          
-          resData: data,
+          resData: apiData,
           developmentTable: res.obj,
         });
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false); // Set loading to false after fetching
       }
     };
 
     fetchData();
   }, []); // Empty dependency array to ensure the effect runs only once
 
-  if (!data) {
-    // Render loading state or return null
-    return null;
+  if (isLoading) {
+    // Render loading spinner
+    return (
+      <Flex
+        pt={{ base: "130px", md: "80px", xl: "80px" }}
+        height="100vh"
+        justify="center"
+        align="center"
+      >
+        <Spinner
+          color="teal.500"
+          thickness="4px" // Adjust thickness as needed
+          speed="0.65s" // Adjust speed as needed
+          emptyColor="gray.200" // Adjust empty color as needed
+          style={{ width: "4em", height: "4em" }} // Adjust width and height for larger size
+        />
+      </Flex>
+    );
   }
-  console.log("setData", data)
+  console.log("setData", data);
   // Chakra Color Mode
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
       <SimpleGrid
-        mb='20px'
+        mb="20px"
         columns={{ sm: 1, md: 1 }}
         spacing={{ base: "20px", xl: "20px" }}
         justifyContent="center" // Center the content horizontally
-        alignItems="center">
+        alignItems="center"
+      >
         <DevelopmentTable
           columnsData={columnsDataDevelopment}
           tableData={data.developmentTable}
           resData={data.resData}
         />
-       
       </SimpleGrid>
     </Box>
   );

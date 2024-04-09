@@ -1,7 +1,4 @@
-/* eslint-disable */
-// ... (other imports)
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useFormik } from "formik";
@@ -10,15 +7,10 @@ import { useFormik } from "formik";
 import {
   Box,
   Button,
-  Checkbox,
   Flex,
   FormControl,
   FormLabel,
   Heading,
-  Icon,
-  Input,
-  InputGroup,
-  InputRightElement,
   Image,
   Text,
   useColorModeValue,
@@ -30,27 +22,24 @@ import DefaultAuth from "layouts/auth/Default";
 import purposeBlackLogo from "../../../components/icons/purposeblackethiopia.png";
 
 // Assets
-import { usernameValidate } from "../../../helper/validate";
-import ii from "assets/img/ETH.png";
-import ll from "assets/img/ppp.jpg";
-import imgs from "assets/img/Purpose-black.jpg"
-import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { RiEyeCloseLine } from "react-icons/ri";
-import {  verifyOTP } from "../../../helper/helper";
+import imgs from "assets/img/Purpose-black.jpg";
+import { verifyOTP } from "../../../helper/helper";
 import { useAuthStore } from "../../../store/store";
 
-function SignIIn() {
+function SignIn() {
   const history = useHistory();
   const { username, token } = useAuthStore((state) => state.auth);
-  const [show, setShow] = useState(false);
+  const [otpValues, setOtpValues] = useState(['', '', '', '']); // Array to hold OTP values
 
-  // useEffect(() => {
-  //   generateOTP(username).then((OTP) => {
-  //     console.log(OTP);
-  //     if (OTP) return toast.success("OTP has been sent to your email!");
-  //     return toast.error("Problem while generating OTP!");
-  //   });
-  // }, [username]);
+  const handleChange = (index, value) => {
+    const updatedOtpValues = [...otpValues];
+    updatedOtpValues[index] = value;
+    setOtpValues(updatedOtpValues);
+    if (value && index < 3) {
+      // Move focus to the next input box
+      inputRefs[index + 1].current.focus();
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -58,23 +47,14 @@ function SignIIn() {
     },
     validateOnBlur: false,
     validateOnChange: false,
-    onSubmit: async (values) => {
+    onSubmit: async () => {
+      const otp = otpValues.join(''); // Concatenate OTP values
       try {
-        const { otp } = values;
-  
-        // Make the OTP verification request
         const { status, data } = await verifyOTP({ otp });
-  
         if (status === 200) {
-          // Assuming the token is present in the response data
           const { token } = data;
-  
-          // Save the token to local storage
           localStorage.setItem('token', token);
-  
-          // Redirect to the specified route using the token
           history.push("/admin/default");
-  
           toast.success("Verification Successful!");
         } else {
           toast.error("Invalid token or verification failed!");
@@ -85,30 +65,12 @@ function SignIIn() {
       }
     },
   });
-  
-  
-
-  const handleClick = () => setShow(!show);
-
-  // const resendOTP = () => {
-  //   let sentPromise = generateOTP(username);
-
-  //   toast.promise(sentPromise, {
-  //     loading: 'Sending...',
-  //     success: <b>OTP has been sent to your email!</b>,
-  //     error: <b>Could not send it!</b>,
-  //   });
-
-  //   sentPromise.then((OTP) => {
-  //     console.log(OTP);
-  //   });
-  // };
 
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
-  const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
-  const textColorBrand = useColorModeValue("brand.500", "white");
   const brandStars = useColorModeValue("brand.500", "brand.400");
+
+  // Array to hold refs for each input box
+  const inputRefs = [useRef(), useRef(), useRef(), useRef()];
 
   return (
     <DefaultAuth illustrationBackground={imgs} image={imgs}>
@@ -126,20 +88,6 @@ function SignIIn() {
         mt={{ base: "40px", md: "14vh" }}
         flexDirection="column"
       >
-        {/* <Box me="auto">
-          <Heading color={textColor} fontSize="36px" mb="10px">
-            Sign In
-          </Heading>
-          <Text
-            mb="36px"
-            ms="4px"
-            color={textColorSecondary}
-            fontWeight="400"
-            fontSize="md"
-          >
-            Enter your Verification Code to Sign in!!
-          </Text>
-        </Box> */}
         <Flex
           zIndex="2"
           direction="column"
@@ -153,13 +101,6 @@ function SignIIn() {
           boxShadow="lg"
           padding="3rem"
         >
-          {/* <Flex align="center" mb="25px">
-            <HSeparator />
-            <Text color="gray.400" mx="14px">
-              here
-            </Text>
-            <HSeparator />
-          </Flex> */}
           <Flex align="center" mb="0px">
             <Image
               src={purposeBlackLogo}
@@ -178,84 +119,39 @@ function SignIIn() {
             >
               OTP<Text color={brandStars}>*</Text>
             </FormLabel>
-            <InputGroup size="md">
-              <Input
-                isRequired={true}
-                onChange={formik.handleChange}
-                value={formik.values.otp}
-                onBlur={formik.handleBlur}
-                name="otp"
-                fontSize="2xl"
-                placeholder=""
-                mb="24px"
-                size="lg"
-                type="number" 
-                textAlign="center" // Center-align the digits
-                borderRadius="8px"
-                
-              />
-              {/* <InputRightElement display="flex" alignItems="center" mt="4px">
-                <Icon
-                  color={textColorSecondary}
-                  _hover={{ cursor: "pointer" }}
-                  as={show ? RiEyeCloseLine : MdOutlineRemoveRedEye}
-                  onClick={handleClick}
-                />
-              </InputRightElement> */}
-            </InputGroup>
-            <Flex justifyContent="space-between" align="center" mb="24px">
-              {/* <FormControl display="flex" alignItems="center">
-                <Checkbox id="remember-login" colorScheme="brandScheme" me="10px" />
-                <FormLabel
-                  htmlFor="remember-login"
-                  mb="0"
-                  fontWeight="normal"
-                  color={textColor}
-                  fontSize="sm"
-                >
-                  Keep me logged in
-                </FormLabel>
-              </FormControl> */}
+            <Flex>
+              {otpValues.map((value, index) => (
+                <Box key={index} mx="2" width="3rem" height="3rem" borderRadius="md" border="2px solid" ml='2rem' borderColor="gray.500" transition="border-color 0.3s ease-in-out">
+                  <input
+                    ref={inputRefs[index]} // Assign ref
+                    type="number"
+                    value={value}
+                    onChange={(e) => handleChange(index, e.target.value)}
+                    maxLength={1}
+                    style={{ width: '100%', height: '100%', textAlign: 'center', border: 'none', outline: 'none', fontSize: '1.5rem' }}
+                  />
+                </Box>
+              ))}
             </Flex>
             <Button
               type="submit"
               fontSize="sm"
-              color = '#fff'
+              color="#fff"
               fontWeight="500"
               w="100%"
               h="50"
-              mb="24px"
+              mt="1rem"
               backgroundColor="#d7a022"
-              _hover={{ backgroundColor: "#e9b334" }} // Add hover effect
+              _hover={{ backgroundColor: "#e9b334" }}
               _active={{ backgroundColor: "#c1931e" }}
             >
               Sign In
             </Button>
           </FormControl>
-          <Flex
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="start"
-            maxW="100%"
-            mt="0px"
-          >
-            {/* <Text color={textColorDetails} fontWeight="400" fontSize="14px">
-              Can't get OTP?
-              <Text
-                color={textColorBrand}
-                as="span"
-                ms="5px"
-                // onClick={resendOTP}
-                fontWeight="500"
-              >
-                Resend
-              </Text>
-            </Text> */}
-          </Flex>
         </Flex>
       </Flex>
     </DefaultAuth>
   );
 }
 
-export default SignIIn;
+export default SignIn;

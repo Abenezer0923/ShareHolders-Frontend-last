@@ -24,15 +24,14 @@ export default function Dashboard(props) {
   const [toggleSidebar, setToggleSidebar] = useState(false);
 
   // Function to filter out the Templete route
-  const filteredRoutes = routes.filter(
-    (route) =>
-      !(
-        (route.layout === "/admin" &&
-          (route.path === "/Templete" || route.path === "/Otp" || route.path === "/Sign-in")) ||
-        (route.layout === "/auth" || route.layout === "/otp") &&
-        (route.path === "/sign-in" || route.path === "/otp")
-      )
-  );
+  const filteredRoutes = routes.filter((route) =>
+  (route.layout === "/admin") &&
+  route.path !== "/templete" &&
+  route.path !== "/invoicess" &&
+  route.path !== "/invoice" 
+);
+
+
   
   
   // functions for changing the states from components
@@ -160,7 +159,7 @@ export default function Dashboard(props) {
               <Box>
                 <Navbar
                   onOpen={onOpen}
-                  logoText={"Horizon UI Dashboard PRO"}
+                  logoText={"Purpose Black ETH"}
                   brandText={getActiveRoute(filteredRoutes)}
                   secondary={getActiveNavbar(filteredRoutes)}
                   message={getActiveNavbarText(filteredRoutes)}

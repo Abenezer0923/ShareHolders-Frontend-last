@@ -45,8 +45,7 @@ function SignIIn() {
   const history = useHistory();
   const setUsername = useAuthStore((state) => state.setUsername);
   const { username } = useAuthStore((state) => state.auth);
-  //const [fetchData] = useFetch(`/user/${username}`);
-  //const { isLoading, apiData, serverError } = fetchData;
+
 
   // Chakra color mode
   const textColor = useColorModeValue("navy.700", "white");
@@ -76,7 +75,7 @@ function SignIIn() {
     validateOnBlur: false,
     validateOnChange: false,
     onSubmit: async (values) => {
-      // Set the username before making the verification call
+     
       setUsername(values.username);
 
       let loginPromise = verifyPassword({
@@ -86,17 +85,16 @@ function SignIIn() {
 
       toast.promise(loginPromise, {
         loading: "Checking...",
-        success: <b>Login Successfully...!</b>,
+        success: <b>Sent OTP Successfully Check Your email</b>,
         error: <b>Password Not Match!</b>,
       });
       loginPromise
         .then((res) => {
-          let { token } = res.data;
-          localStorage.setItem("token", token);
+          
           history.push("/auth/otp");
         })
         .catch((error) => {
-          // Handle authentication error
+          
           console.error(error);
         });
     },
@@ -107,18 +105,17 @@ function SignIIn() {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        // Redirect to the sign-in page if there is no token
+        
         history.push("/auth/sign-in");
       }
     };
 
-    // Call the checkToken function when the component mounts
+    
     checkToken();
   }, [history]);
 
   return (
     <DefaultAuth illustrationBackground={imgs} image={imgs}>
-      {/* Add Toaster component */}
       <Toaster position="top-center" reverseOrder={false}></Toaster>
       <Flex
         maxW={{ base: "100%", md: "max-content" }}
@@ -133,11 +130,7 @@ function SignIIn() {
         mt={{ base: "40px", md: "14vh" }}
         flexDirection="column"
       >
-        <Box me="auto">
-          {/* <Heading color="#d7a022"fontSize="36px" ml="110px">
-            Sign In
-          </Heading> */}
-        </Box>
+         
         <Flex
           zIndex="2"
           direction="column"
@@ -148,7 +141,7 @@ function SignIIn() {
           mx={{ base: "auto", lg: "unset" }}
           me="auto"
           mb={{ base: "20px", md: "auto" }}
-          boxShadow="lg"
+          boxShadow="0px 4px 6px rgba(0, 0, 0, 0.1), 0px 1px 3px rgba(0, 0, 0, 0.08);" 
           padding="3rem"
         >
           <Flex align="center" mb="0px">
@@ -213,33 +206,9 @@ function SignIIn() {
             </InputGroup>
             <Flex justifyContent="space-between" align="center" mb="24px">
               <FormControl display="flex" alignItems="center">
-                {/* <Checkbox
-                  id="remember-login"
-                  colorScheme="brandScheme"
-                  me="10px"
-                />
-                <FormLabel
-                  htmlFor="remember-login"
-                  mb="0"
-                  fontWeight="normal"
-                  color={textColor}
-                  fontSize="sm"
-                >
-                  Keep me logged in
-                </FormLabel> */}
+               
               </FormControl>
-              {/* <NavLink to="/auth/otp" onClick={() => history.push("auth/otp")}>
-                <Text
-                  color={textColorBrand}
-                  fontSize="sm"
-                  w="124px"
-                  fontWeight="500"
-                  onClick={handleRecoverNowClick}
-                  style={{ cursor: "pointer" }}
-                >
-                  Recover Now
-                </Text>
-              </NavLink> */}
+             
             </Flex>
 
             <Button
@@ -264,18 +233,15 @@ function SignIIn() {
             maxW="100%"
             mt="0px"
           >
-            {/* <Text color={textColorDetails} fontWeight='400' fontSize='14px'>
-              Not registered yet?
-              <NavLink to='/auth/sign-up'>
-                <Text
-                  color={textColorBrand}
-                  as='span'
-                  ms='5px'
-                  fontWeight='500'>
-                  Create an Account
-                </Text>
-              </NavLink>
-            </Text> */}
+             <Text
+          color={textColorDetails}
+          fontWeight="400"
+          fontSize="14px"
+          onClick={() => history.push("/auth/forgetPassword")}
+          style={{ cursor: "pointer" }}
+        >
+          Forgot Password?
+        </Text>
           </Flex>
         </Flex>
       </Flex>

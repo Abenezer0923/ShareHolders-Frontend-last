@@ -6,6 +6,15 @@ axios.defaults.baseURL = "http://localhost:8080";
 
 /** Make API Requests */
 
+export async function verifyEmail({email}) {
+    try {
+        const {data, status} = await axios.post('http://localhost:2024/api/auth/forgotPassword', {email: email})
+        return {data, status};
+    } catch (error) {
+        return Promise.reject(error)
+    }
+}
+
 
 /** To get username from Token */
 export async function getUsername(){
@@ -56,7 +65,7 @@ export async function registerUser(credentials){
 export async function verifyPassword({ username, password }){
     try {
         if(username){
-            const { data } = await axios.post('https://api.purposeblacketh.com/api/auth/login', { username, password })
+            const { data } = await axios.post('http://localhost:2024/api/auth/login', { username, password })
             return Promise.resolve({ data });
         }
     } catch (error) {
@@ -97,7 +106,7 @@ export async function updateUser(response){
 /** verify OTP */
 export async function verifyOTP({ otp }) {
     try {
-      const { data, status } = await axios.post('https://api.purposeblacketh.com/api/auth/verifyOTP', { otp: otp });
+      const { data, status } = await axios.post('http://localhost:2024/api/auth/verifyOTP', { otp: otp });
       return { data, status };
     } catch (error) {
       return Promise.reject(error);

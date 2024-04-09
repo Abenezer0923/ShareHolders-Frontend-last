@@ -1,69 +1,106 @@
-/* eslint-disable */
 import {
-  Button,
   Box,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
-  useColorModeValue,
-  Text,
   Td,
-  Modal,
-  ModalBody,
-  ModalOverlay,
+  Input,
+  Button,
+  Text,
   Flex,
+  Spacer,
+  Modal,
+  ModalOverlay,
   ModalContent,
-  ModalCloseButton,
-  ModalFooter,
   ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
 } from "@chakra-ui/react";
-import prupose from "../../../../components/icons/purposeblackethiopia.png"
-
-// Custom components
-import Card from "components/card/Card";
-import { AndroidLogo, AppleLogo, WindowsLogo } from "components/icons/Icons";
-import Menu from "components/menu/MainMenu";
-import img from "../../../../assets/img/Purpose-black.jpg";
-import React, { useMemo, useState, useEffect } from "react";
-import {columnsDataDevelopment} from "../variables/columnsData"
+import { useReactToPrint } from "react-to-print";
+import React, { useMemo, useState, useRef, useEffect } from "react";
+import imgss from "../../../../assets/img/Purpose-black.jpg";
+import { useTable, usePagination, useGlobalFilter } from "react-table";
+import { columnsDataCheck } from "../variables/columnsData";
+import { Link } from "react-router-dom";
+import html2canvas from "html2canvas";
+import Chip from "@mui/material/Chip";
 import html2pdf from "html2pdf.js";
-const bgButton = "d7a022";
-import {
-  useGlobalFilter,
-  usePagination,
-  useSortBy,
-  useTable,
-} from "react-table";
+import prupose from "../../../../components/icons/purposeblackethiopia.png";
 import axios from "axios";
-
-export default function DevelopmentTable(props) {
-  const { columnsData, tableData } = props;
+import "./assets/css/style.css";
+import routes from "routes";
+import Invoice from "views/admin/invoice";
+export default function DevelopmentTable({ columnsData, tableData }) {
   const [selectedRow, setSelectedRow] = useState(null);
   const [shouldPrint, setShouldPrint] = useState(false);
-  const textColor = useColorModeValue("secondaryGray.900", "white");
-  const [res, setRes] = useState(null);
+  const [dynamicRoutes, setDynamicRoutes] = useState(routes);
+  const [certificateVisible, setCertificateVisible] = useState(false);
+  const [certificateData, setCertificateData] = useState(null);
+
+  const addDynamicRoute = () => {
+    // Check if the route is already added
+    const templeteRouteExists = dynamicRoutes.some(
+      (route) => route.path === "/invoice"
+    );
+
+    if (!templeteRouteExists) {
+      // Add the dynamic route
+      const newDynamicRoutes = [
+        ...dynamicRoutes,
+        {
+          layout: "/admin",
+          path: "/invoice",
+          component: Invoice,
+          hidden: true,
+        },
+      ];
+
+      setDynamicRoutes(newDynamicRoutes);
+    }
+  };
+  const handleDownload = () => {
+    const invoiceNode = document.getElementById("tm_download_section");
+
+    html2canvas(invoiceNode).then((canvas) => {
+      const imageData = canvas.toDataURL("image/png");
+
+      const link = document.createElement("a");
+      link.href = imageData;
+      link.download = "invoice.png";
+
+      link.click();
+    });
+  };
 
   const handleDownloadAsPDF = () => {
-    const printArea = document.getElementById('print-area');
-    
+    const printArea = document.getElementById("print-area");
+
     if (printArea) {
       const options = {
         margin: 10,
-        filename: 'invoice.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
+        filename: "invoice.pdf",
+        image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       };
-  
+
       html2pdf().from(printArea).set(options).save();
     }
   };
 
+  const formatDate = (dateString) => {
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const [res, setRes] = useState(null);
+
   const columns = useMemo(
     () =>
-      columnsDataDevelopment.map((column) => {
+      columnsDataCheck.map((column) => {
         if (column.Header === "DATE") {
           return {
             ...column,
@@ -72,38 +109,42 @@ export default function DevelopmentTable(props) {
         }
         return column;
       }),
-    [columnsDataDevelopment]
+    [columnsDataCheck]
   );
-  const data = useMemo(() => tableData, [tableData]);
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    const formattedDate = new Date(dateString).toLocaleDateString(
-      undefined,
-      options
-    );
-    return formattedDate;
-  };
 
-  const tableInstance = useTable(
-    {
-      columns,
-      data,
-    },
-    useGlobalFilter,
-    useSortBy,
-    usePagination
-  );
+  const data = useMemo(() => tableData, [tableData]);
 
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     page,
-    rows,
+    nextPage,
+    previousPage,
+    canNextPage,
+    canPreviousPage,
+    state,
+    setGlobalFilter,
     prepareRow,
-    initialState,
-  } = tableInstance;
-  initialState.pageSize = 11;
+  } = useTable(
+    {
+      columns,
+      data,
+      initialState: { pageSize: 10 },
+    },
+    useGlobalFilter,
+    usePagination
+  );
+
+  const { globalFilter, pageIndex } = state;
+
+  const handleRowClick = (rowData) => {
+    console.log("Clicked row data:", rowData);
+    setCertificateData(rowData);
+    setCertificateVisible(true);
+  };
+
+  const orderItems = [{}];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,7 +155,7 @@ export default function DevelopmentTable(props) {
         };
 
         const response = await axios.get(
-          "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+          "http://localhost:2024/api/shareHolder/dashBoard",
           { headers }
         );
 
@@ -165,240 +206,274 @@ export default function DevelopmentTable(props) {
     };
 
     fetchData();
-  }, []); // Empty dependency array to ensure the effect runs only once
+  }, []);
 
-  if (!res) {
-    // Render loading state or return null
-    return null;
-  }
+  const componentRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   return (
-    <Card
-    direction="column"
-    w="100%"
-    px="0px"
-    overflowX={{ sm: "scroll", lg: "hidden" }}
-  >
-    <Flex px="25px" justify="space-between" align="center">
-        <Text
-          color={textColor}
-          fontSize="22px"
-          fontWeight="700"
-          lineHeight="100%"
-        >
+    <Box borderWidth="1px" borderRadius="lg" p="4">
+      <Flex alignItems="center" mb="4">
+        <Text fontSize="lg" fontWeight="bold" mr="4">
           Latest Transactions
         </Text>
-        {/* <Link to="data-tables" style={{ textDecoration: "none" }}>
-        <Button
-          bg={`#${bgButton}`}
-          ml="auto"
-          fontSize="sm"
-          fontWeight="500"
-          color="#ffff"
-          borderRadius="7px"
+        <Input
+          placeholder="Search..."
+          value={globalFilter || ""}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          w="40%"
+          mr="2"
+        />
+        <Spacer />
+        {/* <Button
+          onClick={() => console.log("Show All clicked")}
+          colorScheme="orange"
+          size="sm"
         >
           Show All
-        </Button>
-
-        </Link> */}
-        
+        </Button> */}
       </Flex>
-    <Table
-      {...getTableProps()}
-      variant="simple"
-      css={`
-        tbody tr:hover {
-          background-color: rgba(0, 0, 0, 0.05);
-          cursor: pointer;
-        }
-      `}
-      color="gray.500"
-      mb="24px"
-    >
-      <Thead>
-        {headerGroups.map((headerGroup, index) => (
-          <Tr {...headerGroup.getHeaderGroupProps()} key={index}>
-            {headerGroup.headers.map((column, index) => (
-              <Th
-                {...column.getHeaderProps(column.getSortByToggleProps())}
-                pe="10px"
+      <Table {...getTableProps()} variant="striped" colorScheme="gray">
+        <Thead>
+          {headerGroups.map((headerGroup, index) => (
+            <Tr
+              key={index}
+              {...headerGroup.getHeaderGroupProps()}
+              onClick={() => setSelectedRow(headerGroup)}
+            >
+              {headerGroup.headers.map((column, index) => (
+                <Th key={index} {...column.getHeaderProps()}>
+                  {column.render("Header")}
+                </Th>
+              ))}
+            </Tr>
+          ))}
+        </Thead>
+        <Tbody {...getTableBodyProps()}>
+          {page.map((row, index) => {
+            prepareRow(row);
+            return (
+              <Tr
                 key={index}
+                {...row.getRowProps()}
+               
+                onClick={() => handleRowClick(row)}
+                _hover={{ bg: "gray.100", cursor: "pointer" }}
               >
-                {column.render("Header")}
-              </Th>
-            ))}
-          </Tr>
-        ))}
-      </Thead>
-      <Tbody {...getTableBodyProps()}>
-        {rows.map((row, index) => {
-          prepareRow(row);
-          return (
-            <React.Fragment key={index}>
-              <Tr {...row.getRowProps()} onClick={() => setSelectedRow(row)}>
                 {row.cells.map((cell, index) => (
-                  <Td
-                    {...cell.getCellProps()}
-                    key={index}
-                    fontSize={{ sm: "14px" }}
-                    minW={{ sm: "150px", md: "200px", lg: "auto" }}
-                  >
-                    {cell.render("Cell")}
+                  <Td key={index} {...cell.getCellProps()}>
+                   
+                      {cell.render("Cell")}
+                    
                   </Td>
                 ))}
               </Tr>
-            </React.Fragment>
-          );
-        })}
-      </Tbody>
-    </Table>
-
-    {/* Updated Modal */}
-    {selectedRow && (
-        <Modal
-          isOpen={!!selectedRow}
-          onClose={() => {
-            setSelectedRow(null);
-            setShouldPrint(false);
-          }}
-          isCentered
-          size="2xl"
+            );
+          })}
+        </Tbody>
+      </Table>
+      <Flex justify="space-between" mt="4">
+        <Button onClick={() => previousPage()} disabled={!canPreviousPage}>
+          Previous
+        </Button>
+        <Text>
+          Page {pageIndex + 1} of {Math.ceil(data.length / 10)}
+        </Text>
+        <Button onClick={() => nextPage()} disabled={!canNextPage}>
+          Next
+        </Button>
+      </Flex>
+      {certificateVisible && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          width="100%"
+          height="100%"
+          backgroundColor="rgba(0,0,0,0.5)"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          zIndex="999"
         >
-          <ModalOverlay />
-          <ModalContent bg="white" p={6} borderRadius="md">
-            {/* <ModalHeader>
-              <h3>Invoice Details</h3>
-            </ModalHeader> */}
-            <ModalBody>
-              <ModalCloseButton color="gray.700" />
-              <Box>
-                <div className="invoice-wrapper" id="print-area">
-                  <div className="invoice">
-                    <div className="invoice-container">
-                      <div className="invoice-head">
-                        <div className="invoice-head-top">
-                          <div className="invoice-head-top-left text-start">
-                            <img src={prupose} alt="Company Logo" />
-                          </div>
-                          <div className="invoice-head-top-right text-end">
-                            <h3>Invoice Details</h3>
-                          </div>
-                        </div>
-                        <div className="hr"></div>
-                        <div className="invoice-head-middle">
-                          <div className="invoice-head-middle-left text-start">
-                            <p>
-                              <span className="text-bold">Date:</span>{" "}
-                              {selectedRow.original &&
-                                formatDate(selectedRow.original.createdAt)}
-                            </p>
-                          </div>
-                          <div className="invoice-head-middle-right text-end">
-                            <p>
-                              <span className="text-bold">Address:</span>{" "}
-                              {res.info.address}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="hr"></div>
-                        <div className="invoice-head-bottom">
-                          <div className="invoice-head-bottom-left">
-                            <ul className="text-start">
-                              <span className="text-bold">Name:</span>{" "}
-                              {res.info.first_name} {res.info.last_name}
-                            </ul>
-                          </div>
-                          <div className="invoice-head-bottom-right">
-                            <ul className="text-end">
-                              <span className="text-bold">PayTo:</span>{" "}
-                              PurposeBlackETH
-                            </ul>
-                          </div>
+          <Box
+            backgroundColor="white"
+            padding="4"
+            borderRadius="md"
+            boxShadow="md"
+          >
+            <div className="tm_container">
+              <div className="tm_invoice_wrap">
+                <div
+                  className="tm_invoice tm_style1 tm_type1"
+                  id="tm_download_section"
+                >
+                  <div className="tm_invoice_in">
+                    <div className="tm_invoice_head tm_top_head tm_mb15 tm_align_center">
+                      <div className="tm_invoice_left">
+                        <div className="tm_logo">
+                          <img src={prupose} alt="Logo" />
                         </div>
                       </div>
-                      <div className="overflow-view">
-                        <div className="invoice-body">
+                      <div className="tm_invoice_right tm_text_right tm_mobile_hide">
+                        <div className="tm_f50 tm_text_uppercase tm_white_color">
+                          Invoice
+                        </div>
+                      </div>
+                      <div className="tm_shape_bg tm_accent_bg tm_mobile_hide"></div>
+                    </div>
+                    <div className="tm_invoice_info tm_mb25">
+                      <div className="tm_card_note tm_mobile_hide">
+                        <b className="tm_primary_color">Payment Method: </b>
+                        {certificateData.paymentMethod}
+                      </div>
+                      <div className="tm_invoice_info_list tm_white_color">
+                        <p className="tm_invoice_number tm_m0">
+                          Invoice No: <b>{certificateData.transaction_id}</b>
+                        </p>
+                        <p className="tm_invoice_date tm_m0">
+                          Date: <b>{formatDate(certificateData.createdAt)}</b>
+                        </p>
+                      </div>
+                      <div className="tm_invoice_seperator tm_accent_bg"></div>
+                    </div>
+                    <div className="tm_invoice_head tm_mb10">
+                      <div className="tm_invoice_left">
+                        <p className="tm_mb2">
+                          <b className="tm_primary_color">Invoice To:</b>
+                        </p>
+                        <p>
+                          status:
+                          {certificateData.status}
+                          <br />
+                          manual_receipt_issued:
+                          {certificateData.manual_receipt_issued}
+                          <br />
+                          paidAmount:
+                          {certificateData.paidAmount} birr
+                          <br />
+                        </p>
+                      </div>
+                      <div className="tm_invoice_right tm_text_right">
+                        <p className="tm_mb2">
+                          <b className="tm_primary_color">Pay To:</b>
+                        </p>
+                        <p>
+                          PurposeBlackETH <br />
+                          Sengatera Negadewoch Hibret BLDG,
+                          <br />
+                          Addis Ababa
+                        </p>
+                      </div>
+                    </div>
+                    <div className="tm_table tm_style1">
+                      <div className="">
+                        <div className="tm_table_responsive">
                           <table>
                             <thead>
-                              <tr>
-                                <td className="text-bold">Bill Number</td>
-                                <td className="text-bold">Paid Amount</td>
-                                <td className="text-bold">status</td>
-                                <td className="text-bold">Payment Method</td>
+                              <tr className="tm_accent_bg">
+                                <th className="tm_width_3 tm_semi_bold tm_white_color">
+                                  Name
+                                </th>
+                                <th className="tm_width_4 tm_semi_bold tm_white_color">
+                                  Email
+                                </th>
+                                <th className="tm_width_2 tm_semi_bold tm_white_color">
+                                  Price
+                                </th>
+                                <th className="tm_width_1 tm_semi_bold tm_white_color">
+                                  Phone Number
+                                </th>
+                                <th className="tm_width_2 tm_semi_bold tm_white_color tm_text_right">
+                                  Address
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
                               <tr>
-                                <td>{selectedRow.original.bill_ref_number}</td>
-                                <td>{selectedRow.original.paidAmount}</td>
-                                <td>{selectedRow.original.status}</td>
-                                <td>{selectedRow.original.paymentMethod}</td>
+                                <td className="tm_width_3">
+                                  {res.info.first_name} {"  "}
+                                  {res.info.last_name}
+                                </td>
+                                <td className="tm_width_4">{res.info.email}</td>
+                                <td className="tm_width_2">
+                                  {certificateData.paidAmount}
+                                </td>
+                                <td className="tm_width_1">{res.info.phone}</td>
+                                <td className="tm_width_2 tm_text_right">
+                                  {res.info.address}
+                                </td>
                               </tr>
                             </tbody>
                           </table>
-                          <div className="invoice-body-bottom">
-                            <div className="invoice-body-info-item border-bottom">
-                              <div className="info-item-td text-end text-bold">
-                                Transaction ID:
-                              </div>
-                              <div className="info-item-td text-end">
-                                {selectedRow.original.transaction_id}
-                              </div>
-                            </div>
-                            <div className="invoice-body-info-item border-bottom">
-                              <div className="info-item-td text-end text-bold">
-                                Phone:
-                              </div>
-                              <div className="info-item-td text-end">
-                                {res.info.phone}
-                              </div>
-                            </div>
-                            <div className="invoice-body-info-item border-bottom">
-                              <div className="info-item-td text-end text-bold">
-                                Email:
-                              </div>
-                              <div className="info-item-td text-end">
-                                {res.info.email}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="invoice-foot text-center">
-                        <p>
-                          <span className="text-bold text-center">
-                            Address:&nbsp;
-                          </span>
-                          Sengatera Negadewoch Hibret BLDG, Addis Ababa
-                        </p>
-                        <div className="invoice-btns">
-                          {/* <button
-            type="button"
-            className="invoice-btn"
-            onClick={() => {
-              handlePrint(); // Trigger print when the print button is clicked
-             // Reset the state after download/print
-            }}
-          >
-                            <span>Print</span>
-                          </button> */}
-                          <button
-                            type="button"
-                            className="invoice-btn"
-                            onClick={handleDownloadAsPDF}
-                          >
-                            <span>Download</span>
-                          </button>
                         </div>
                       </div>
                     </div>
+                    <div className="tm_note tm_text_center tm_font_style_normal">
+                      <hr className="tm_mb15" />
+                    </div>
                   </div>
                 </div>
-              </Box>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
+                <div className="tm_invoice_btns tm_hide_print">
+                  <a
+                    href="#"
+                    onClick={() => window.print()} // Change the href attribute to "#" and add onClick event handler to print
+                    className="tm_invoice_btn tm_color1"
+                  >
+                    <span className="tm_btn_icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="ionicon"
+                        viewBox="0 0 512 512"
+                      >
+                        <path
+                          d="M320 336h76c55 0 100-21.21 100-75.6s-53-73.47-96-75.6C391.11 99.74 329 48 256 48c-69 0-113.44 45.79-128 91.2-60 5.7-112 35.88-112 98.4S70 336 136 336h56M192 400.1l64 63.9 64-63.9M256 224v224.03"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="32"
+                        />
+                      </svg>
+                    </span>
+                    <span className="tm_btn_text">Print</span>
+                  </a>
+                  <button
+                    id="tm_download_btn"
+                    className="tm_invoice_btn tm_color2"
+                    onClick={handleDownload} // Add onClick event handler to trigger download
+                  >
+                    <span className="tm_btn_icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="ionicon"
+                        viewBox="0 0 512 512"
+                      >
+                        <path
+                          d="M320 336h76c55 0 100-21.21 100-75.6s-53-73.47-96-75.6C391.11 99.74 329 48 256 48c-69 0-113.44 45.79-128 91.2-60 5.7-112 35.88-112 98.4S70 336 136 336h56M192 400.1l64 63.9 64-63.9M256 224v224.03"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="32"
+                        />
+                      </svg>
+                    </span>
+                    <span className="tm_btn_text">Download</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <Button color="red" onClick={() => setCertificateVisible(false)}>
+              Close
+            </Button>
+          </Box>
+        </Box>
       )}
-  </Card>
+      {/* Updated Modal */}
+    </Box>
   );
 }

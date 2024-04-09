@@ -5,6 +5,7 @@ import {
   FormLabel,
   Icon,
   Select,
+  Spinner,
   SimpleGrid,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -43,8 +44,9 @@ import useFetch from "hooks/fetch.hook";
 import axios from "axios";
 import create from "zustand";
 
-const UserReports =  () => {
+const UserReports = () => {
   const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,42 +57,40 @@ const UserReports =  () => {
         };
 
         const response = await axios.get(
-          "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+          process.env.REACT_APP_API_URL,
           { headers }
         );
 
         const apiData = response.data.data;
-        console.log("apis", apiData)
-        console.log("api total", apiData.shareCatagoryTotal)
-        let lists = []
-        for(let i = 0; i < (apiData.shareCatagoryTotal).length; i ++){
-          lists.push(apiData.shareCatagoryTotal[i]._id)
+        console.log("apis", apiData);
+        console.log("api total", apiData.shareCatagoryTotal);
+        let lists = [];
+        for (let i = 0; i < apiData.shareCatagoryTotal.length; i++) {
+          lists.push(apiData.shareCatagoryTotal[i]._id);
         }
-        let idxOfOrdinary = lists.indexOf('ordinary')
-        let idxOfFranchis = lists.indexOf('franchise')
-        let idxOfTsm = lists.indexOf('tsm')
-        let valueOfTsm = 0
-        let valueOfOrdinary = 0
-        let valueOfFranchise = 0
-        if (idxOfOrdinary !== -1){
-          valueOfOrdinary = apiData.shareCatagoryTotal[idxOfOrdinary].total          
+        let idxOfOrdinary = lists.indexOf("ordinary");
+        let idxOfFranchis = lists.indexOf("franchise");
+        let idxOfTsm = lists.indexOf("tsm");
+        let valueOfTsm = 0;
+        let valueOfOrdinary = 0;
+        let valueOfFranchise = 0;
+        if (idxOfOrdinary !== -1) {
+          valueOfOrdinary = apiData.shareCatagoryTotal[idxOfOrdinary].total;
         }
-        if( idxOfFranchis !== -1){
-          valueOfFranchise = apiData.shareCatagoryTotal[idxOfFranchis].total
+        if (idxOfFranchis !== -1) {
+          valueOfFranchise = apiData.shareCatagoryTotal[idxOfFranchis].total;
         }
 
-        if (idxOfTsm !== -1){
-          valueOfTsm = apiData.shareCatagoryTotal[idxOfTsm].total
+        if (idxOfTsm !== -1) {
+          valueOfTsm = apiData.shareCatagoryTotal[idxOfTsm].total;
         }
-         
-        
-        console.log("Algo",lists)
+
+        console.log("Algo", lists);
         const res = { obj: apiData.payment_history.slice(0, 3) };
-        const curr = {ans: apiData.completedShareInfo.slice(0,3)}
-        console.log("currr", curr)
-        
+        const curr = { ans: apiData.completedShareInfo.slice(0, 3) };
+        console.log("currr", curr);
+
         const franchiseData = {
-          
           name: "Franchise",
           growth: "buy",
           value: `${valueOfFranchise}`,
@@ -119,22 +119,38 @@ const UserReports =  () => {
           tsmData,
           totalData,
           checkTableData: res.obj,
-          shareInfo: curr.ans
-          
+          shareInfo: curr.ans,
         });
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false); // Set loading to false after fetching
       }
     };
 
     fetchData();
   }, []); // Empty dependency array to ensure the effect runs only once
 
-  if (!data) {
-    // Render loading state or return null
-    return null;
+  if (isLoading) {
+    // Render loading spinner
+    return (
+      <Flex
+        pt={{ base: "130px", md: "80px", xl: "80px" }}
+        height="100vh"
+        justify="center"
+        align="center"
+      >
+        <Spinner
+          color="teal.500"
+          thickness="4px" // Adjust thickness as needed
+          speed="0.65s" // Adjust speed as needed
+          emptyColor="gray.200" // Adjust empty color as needed
+          style={{ width: "4em", height: "4em" }} // Adjust width and height for larger size
+        />
+      </Flex>
+    );
   }
-  console.log("What",data.shareInfo)
+  console.log("What", data.shareInfo);
 
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
@@ -151,23 +167,26 @@ const UserReports =  () => {
 
       <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap="20px" mb="20px">
         <TotalSpent />
-        <WeeklyRevenue />
-      </SimpleGrid>
-      <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap="20px" mb="20px">
-        <CheckTable columnsData={columnsDataCheck} tableData={data.checkTableData} />
-        <ComplexTable
-          columnsData={columnsDataComplex}
-          tableData={tableDataComplex}
+        {/* <WeeklyRevenue /> */}
+        <CheckTable
+          columnsData={columnsDataCheck}
+          tableData={data.checkTableData}
         />
       </SimpleGrid>
       <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap="20px" mb="20px">
-        <History columnsData={columnsHistoryCheck} tableData={data.shareInfo} />
-
-        <SimpleGrid columns={{ base: 1, md: 1, xl: 1 }} gap="20px">
-          <YoutubeComplaxes
+        {/* <ComplexTable
+          columnsData={columnsDataComplex}
+          tableData={tableDataComplex}
+        /> */}
+        <YoutubeComplaxes
             columnsData={columnsDataComplex}
             tableData={tableDataComplex}
           />
+        <History columnsData={columnsHistoryCheck} tableData={data.shareInfo} />
+      </SimpleGrid>
+      <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap="20px" mb="20px">
+        <SimpleGrid columns={{ base: 1, md: 1, xl: 1 }} gap="20px">
+          
         </SimpleGrid>
       </SimpleGrid>
     </Box>

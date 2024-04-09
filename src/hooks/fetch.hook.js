@@ -2,7 +2,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 
-axios.defaults.baseURL = 'https://api.purposeblacketh.com';
+// axios.defaults.baseURL = 'https://api.purposeblacketh.com';
 
 /** Custom hook */
 export default function useFetch() {
@@ -16,7 +16,7 @@ export default function useFetch() {
       const headers = {
         Authorization: `${token}`,
       };
-      const {data, status} = await axios.get('https://api.purposeblacketh.com/api/shareHolder/dashBoard/', { headers });
+      const {data, status} = await axios.get('http://localhost:2024/api/shareHolder/dashBoard', { headers });
   
       if (status === 200) {
         setData(prev => ({

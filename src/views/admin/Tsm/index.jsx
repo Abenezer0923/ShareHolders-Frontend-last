@@ -3,7 +3,9 @@ import axios from "axios";
 import {
   Box,
   SimpleGrid,
+  Flex,
   useColorModeValue,
+  Spinner,
   Text,
 } from "@chakra-ui/react";
 import CheckTable from "views/admin/Franchise/components/CheckTable";
@@ -24,9 +26,8 @@ import Voice from "views/admin/Tsm/components/Voice";
 export default function UserReports() {
   const [data, setData] = useState(null);
   const [rest, setRest] = useState(false);
-  // Chakra Color Mode
-  const brandColor = useColorModeValue("brand.500", "white");
-  const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
+  const [isnewPaymentPendingOrder, setIsnewPaymentPendingOrder] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,102 +38,134 @@ export default function UserReports() {
         };
 
         const response = await axios.get(
-          "https://api.purposeblacketh.com/api/shareHolder/dashBoard/",
+          process.env.REACT_APP_API_URL,
           { headers }
         );
 
         const apiData = response.data.data;
+        console.log("Heyy Abeniiiiii", apiData.shareHolderInfo._id)
+        let newPaymentOrder = apiData.newPayment_Order;
+        if(newPaymentOrder === null){
+          newPaymentOrder = false
 
-        let lists = [];
-        for (let i = 0; i < apiData.shareCatagoryTotal.length; i++) {
-          lists.push(apiData.shareCatagoryTotal[i]._id);
         }
+        console.log("this is newPaymentOrder", newPaymentOrder)
+        const isnewPaymentPending = newPaymentOrder.paymentStatus === "Pending" && newPaymentOrder.shareCatagory === "tsm";
+
+        setIsnewPaymentPendingOrder(isnewPaymentPending);
+        let lists = apiData.shareCatagoryTotal.map((item) => item._id);
         let idxOfOrdinary = lists.indexOf("ordinary");
         let idxOfFranchis = lists.indexOf("franchise");
         let idxOfTsm = lists.indexOf("tsm");
-        let valueOfTsm = 0;
         let valueOfOrdinary = 0;
         let valueOfFranchise = 0;
+        let valueOfTsm = 0
+
         if (idxOfOrdinary !== -1) {
           valueOfOrdinary = apiData.shareCatagoryTotal[idxOfOrdinary].total;
         }
         if (idxOfFranchis !== -1) {
           valueOfFranchise = apiData.shareCatagoryTotal[idxOfFranchis].total;
         }
-
-        if (idxOfTsm !== -1) {
+        if(idxOfTsm !== -1) {
           valueOfTsm = apiData.shareCatagoryTotal[idxOfTsm].total;
         }
 
         const res = { obj: apiData.payment_history.slice(0, 3) };
+        let currentShareInfo = null;
+        if (apiData.currentShareInfo !== null) {
+          currentShareInfo = apiData.currentShareInfo;
+        }
+
+        const shareHolderId = apiData.shareHolderInfo._id
+        // console({shareHolderId})
+
         const curr = { ans: apiData.completedShareInfo.slice(0, 3) };
-        const prs = apiData.currentPayment.percentage;
-        const shareType = apiData.currentShareInfo.shareCatagory;
+        let shareType = null;
+        if (apiData.currentShareInfo !== null) {
+          shareType = apiData.currentShareInfo.shareCatagory;
+        }
 
         const tsmData = {
-          name: "TSM",
+          name: "Tsm",
           growth: "buy",
           value: `${valueOfTsm}`,
         };
 
         setData({
-          prs,
           tsmData,
           developmentTable: res.obj,
-          info: curr.ans,
+          shareInfo: curr.ans,
           shareType,
+          shareHolderId,
+          currentShareInfo,
+          // isnewPaymentPending,
         });
+
+        if (shareType === "tsm" && !rest) {
+          setRest(true);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
   }, []);
 
-  if (!data) {
-    // Render loading state or return null
-    return null;
+  if (isLoading) {
+    return (
+      <Flex
+        pt={{ base: "130px", md: "80px", xl: "80px" }}
+        height="100vh"
+        justify="center"
+        align="center"
+      >
+        <Spinner
+          color="teal.500"
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          style={{ width: "4em", height: "4em" }}
+        />
+      </Flex>
+    );
   }
+  // console.log("this is the id", data.shareHolderId);
+  console.log("index.js", isnewPaymentPendingOrder);
 
   return (
-    parseInt(data.tsmData.value) === 0 ? (
-      <Box>
-        <Text color="#000" mt="12rem" ml="10rem" fontSize="xxx-large">You Don't Have TSM Share!!</Text>
-      </Box>
-    ) : (
-      <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-        <SimpleGrid
-          columns={{ base: 1, md: 2, lg: 3, "xl": 2 }}
-          gap='25px'
-          mb='20px' >
-            
-          {rest && <Ordinary />}
-          <Total />
-        </SimpleGrid>
-  
-        <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px' mb='20px'>
-          <Box>
-          <Voice  mb='20px'/>
+    <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 2 }} gap="25px" mb="20px">
+        {data && data.currentShareInfo !== null && rest && <Ordinary />}
+        <Total />
+      </SimpleGrid>
+
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap="20px" mb="20px">
+        <Box>
+        {data && data.currentShareInfo === null && (
+  <Voice shareHolderId={data.shareHolderId} isPending={isnewPaymentPendingOrder} />
+)}
+
           <DevelopmentTable
-          columnsData={columnsDataDevelopment}
-          tableData={data.developmentTable}
+            columnsData={columnsDataDevelopment}
+            tableData={data ? data.developmentTable : null}
+          />
+        </Box>
+        <CheckTable
+          columnsData={columnsHistoryCheck}
+          tableData={data ? data.shareInfo : null}
+          w="50%"
         />
-          </Box>
-          <CheckTable columnsData={columnsHistoryCheck} tableData={data.info}  w='50%'/>
-        </SimpleGrid>
-        <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap='20px' mb='20px'>
-        
-          {/* <ComplexTable
-            columnsData={columnsDataComplex}
-            tableData={tableDataComplex}
-          /> */}
-          
-          
-        </SimpleGrid>
-     
-      </Box>
-    )
+      </SimpleGrid>
+      <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap="20px" mb="20px">
+        {/* Additional components */}
+      </SimpleGrid>
+    </Box>
   );
-  
 }
+ 
+
+
