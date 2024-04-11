@@ -37,6 +37,7 @@ import {
   FiCamera,
 } from "react-icons/fi";
 
+import toast, { Toaster } from "react-hot-toast";
 import p1 from "assets/img/Untitled-removebg-preview.png";
 import p2 from "assets/img/tele.png";
 import p3 from "assets/img/Paypal.png";
@@ -54,13 +55,13 @@ export default function TotalSpent(props) {
   const [accountNumber, setAccountNumber] = useState("");
   const [paymentId, setPaymentId] = useState(null);
   const [shareHolderId, setShareHolderId] = useState(null);
-  const [Persentagess, setThePersentage] = useState(null);
-  const [uploadImage, setUploadImage] = useState(null);
-  const [paymentOrders, setPaymentOrders] = useState([]);
-  const [paymentOrderStatus, setpaymentOrderStatus] = useState("");
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [shareCatagoryType, setshareCatagoryType] = useState("");
+  // const [Persentagess, setThePersentage] = useState(null);
+  // const [uploadImage, setUploadImage] = useState(null);
+  // const [paymentOrders, setPaymentOrders] = useState([]);
+  // const [paymentOrderStatus, setpaymentOrderStatus] = useState("");
+  // const [uploadSuccess, setUploadSuccess] = useState(false);
+  // const [uploadedImage, setUploadedImage] = useState(null);
+  // const [shareCatagoryType, setshareCatagoryType] = useState("");
 
   const [uploadProgress, setUploadProgress] = useState(0); // Define uploadProgress
   const [selectedFile, setSelectedFile] = useState(null);
@@ -77,30 +78,23 @@ export default function TotalSpent(props) {
           "Content-Type": "multipart/form-data", // Adding the Content-Type header
         };
 
-        const response = await axios.get(
-           process.env.REACT_APP_API_URL,
-          { headers }
-        );
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/shareHolder/dashBoard`, { headers });
 
         const apiData = response.data.data;
         const thePersentage = apiData.currentPayment.percentage;
         const PaymentOrders = apiData.payment_Order;
-        const havePaymentOrders = apiData.payment_Order;
-        const paymentStatuss = havePaymentOrders ? havePaymentOrders.paymentStatus : null;
-        const shareCatagorys = havePaymentOrders ? havePaymentOrders.shareCatagory : null;
-        setPaymentOrders(havePaymentOrders);
-        setpaymentOrderStatus(paymentStatuss);
-        setshareCatagoryType(shareCatagorys);
+        
+        
 
         const percentage = parseInt(apiData.currentPayment.percentage);
-        const amount = apiData.currentPayment.amountPaid;
+        const amount = apiData.currentPayment.amountSubscribed;
         setSelectedPercentage(percentage);
         const remainingPercentage = 100 - percentage;
         const theIDss = apiData.currentPayment._id;
         const shareId = apiData.shareHolderInfo._id;
         setPaymentId(theIDss);
         setShareHolderId(shareId);
-        setThePersentage(thePersentage);
+        // setThePersentage(thePersentage);
 
         const options = [];
         for (let i = 25; i <= remainingPercentage; i += 25) {
@@ -108,7 +102,7 @@ export default function TotalSpent(props) {
         }
         setDynamicOptions(options);
 
-        // Check if there are any pending payments for "Tsm" category
+        // Check if there are any pending payments for "Ordinary" category
         const isPaymentPending = PaymentOrders.some(order => order.shareCatagory === "tsm" && order.paymentStatus === "Pending");
         setIsPaymentPending(isPaymentPending);
       } catch (error) {
@@ -156,15 +150,15 @@ export default function TotalSpent(props) {
       );
       console.log("Upload successful:", response.data);
       console.log("to see the image", response.data);
-      setUploadedImage(response.data.imageUrl);
-      setUploadSuccess(true);
+      // setUploadedImage(response.data.imageUrl);
+      // setUploadSuccess(true);
     } catch (error) {
       console.error("Error uploading file:", error);
     }
   };
 
   const handlePercentageSelection = (percentage, amount) => {
-    const Totalres = amount * 100;
+    const Totalres = amount;
     const res = (percentage / 100) * Totalres;
     setCalculatedAmount(res);
   };
@@ -181,6 +175,40 @@ export default function TotalSpent(props) {
     console.log("the Acc num is", event.target.value);
     setAccountNumber(event.target.value);
   };
+
+    /*
+    Author :  Melak Sisay
+    Logic  :  Initiating Telebirr Payment
+    Result :  Getting Redirected to Relebirr checkout page
+  */
+    const handleTelebirrPay = async () => {
+      // Change this url to the deployed url on production
+      const telebirrPayUrl = "http://localhost:2024/api/payment/telebirr/pay";
+      axios
+        .post(telebirrPayUrl)
+        .then((data) => {
+          
+          if(data.data.data.code==200){
+            // Show Toast Message for the user
+            toast.success("Redirecting to trelebirr checkout page");
+            setTimeout(() => {
+              // console.log({data,code:data.data.data.code,dataum:data.data.data.data,url:data.data.data.data.toPayUrl})
+              // Redirect the user to a telebirr payment checkout
+              
+              window.location.href = data.data.data.data.toPayUrl;
+            }, 2000);
+          }else{
+            toast.error("Error while making a payment with telebirr,please try again !!!");
+          }
+          
+        })
+        .catch((error) => {
+          // Use a logger method on production to trigger the error happening for the user
+          console.log({ error });
+          // Toast an error message to the user
+          toast.error("Error while making a payment with telebirr");
+        });
+    }
 
   const handlePayButtonClick = async () => {
     try {
@@ -208,7 +236,7 @@ export default function TotalSpent(props) {
       );
 
       console.log("Response from backend:", responseFromBack.data);
-      setpaymentOrderStatus("Pending");
+      // setpaymentOrderStatus("Pending");
       setIsPaymentPending(true); // Set the payment as pending
     } catch (error) {
       console.error("Error while sending data:", error);
@@ -227,6 +255,8 @@ export default function TotalSpent(props) {
       w={{ base: "90%", md: "80%", lg: "70%", xl: "80%" }}
       p={{ base: "20px", md: "40px" }}
     >
+
+    <Toaster position="top-center" reverseOrder={false}></Toaster>
       {isPaymentPending ? (
         <Text color="#d7a022" fontSize="2xl">The Payment is Pending...</Text>
       ) : (
@@ -238,7 +268,7 @@ export default function TotalSpent(props) {
               fontWeight="bold"
               lineHeight="100%"
             >
-              Tsm
+              TSM
             </Text>
           </Flex>
           <Flex
@@ -304,9 +334,7 @@ export default function TotalSpent(props) {
                 {dynamicOptions.map((option) => (
                   <Button
                     key={option.value}
-                    variant={
-                      selectedPercentage === option.value ? "solid" : "outline"
-                    }
+                    
                     colorScheme="blue"
                     onClick={() => {
                       handlePercentageSelection(option.value, option.amount);
@@ -342,7 +370,7 @@ export default function TotalSpent(props) {
                 fontWeight="700"
                 lineHeight="100%"
               >
-                Payment
+                Payment Method
               </Text>
             </Flex>
             <Flex
@@ -351,22 +379,75 @@ export default function TotalSpent(props) {
               ml={{ base: "0", lg: "4rem" }}
             >
               <RadioGroup
-                value={paymentMethod}
-                onChange={handlePaymentMethodChange}
-              >
-                <VStack align={{ base: "start", lg: "stretch" }} spacing={4}>
-                  <Flex direction={{ base: "column", lg: "row" }}>
-                    <Radio
-                      value="bankTransfer"
-                      ml={{ base: "0", lg: "2rem" }}
-                      fontSize="lg"
-                    >
-                      Bank Transfer
-                    </Radio>
-                  </Flex>
-                </VStack>
-              </RadioGroup>
+              value={paymentMethod}
+              onChange={handlePaymentMethodChange}
+            >
+              <VStack align={{ base: "start", lg: "stretch" }} spacing={4}>
+                <Flex direction={{ base: "column", lg: "row" }}>
+                  <Radio value="creditCard">Online Payment</Radio>
+                  <Radio value="bankTransfer" ml={{ base: "0", lg: "2rem" }}>
+                    Bank Transfer
+                  </Radio>
+                </Flex>
+              </VStack>
+            </RadioGroup>
             </Flex>
+            {paymentMethod === "creditCard" && (
+            <Flex justify="space-between" p={4}>
+              {/* Image 1 */}
+              {/* <Link href="" _hover={{ textDecor: "none" }}>
+                <Box
+                  as="img"
+                  src={p1}
+                  alt="Image 1"
+                  boxSize="100px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  cursor="pointer"
+                />
+              </Link> */}
+
+              {/* Image 2 */}
+              {/* <Button onClick={handleTelebirrPay}  */}
+              <Link  onClick={handleTelebirrPay}>
+              <Box
+                  as="img"
+                  src={p2}
+                  alt="Image 2"
+                  boxSize="100px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  cursor="pointer"/>
+
+              </Link>
+
+              {/* Image 3 */}
+              {/* <Link href="#" _hover={{ textDecor: "none" }}>
+                <Box
+                  as="img"
+                  src={p3}
+                  alt="Image 3"
+                  boxSize="100px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  cursor="pointer"
+                />
+              </Link> */}
+
+              {/* Image 4 */}
+              {/* <Link href="" _hover={{ textDecor: "none" }}>
+                <Box
+                  as="img"
+                  src={p4}
+                  alt="Image 4"
+                  boxSize="100px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  cursor="pointer"
+                />
+              </Link> */}
+            </Flex>
+          )}
             {paymentMethod === "bankTransfer" && (
               <>
                 <Button
@@ -406,6 +487,7 @@ export default function TotalSpent(props) {
                     </PopoverBody>
                   </PopoverContent>
                 </Popover>
+                
 
                 <Box w={{ base: "100%", lg: "250px" }} mr="0rem">
                   <Input
@@ -417,10 +499,8 @@ export default function TotalSpent(props) {
                     onChange={handleAccountNumberChange}
                   />
                 </Box>
-              </>
-            )}
 
-            <Flex>
+                <Flex>
               <input
                 type="file"
                 accept="image/*"
@@ -448,6 +528,10 @@ export default function TotalSpent(props) {
                 />
               )}
             </Flex>
+              </>
+            )}
+
+            
 
             <Flex mt={{ base: "2rem", lg: "1rem" }}>
               <Button

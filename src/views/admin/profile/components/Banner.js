@@ -17,7 +17,7 @@ export default function Banner(props) {
       try {
         const token = localStorage.getItem("token");
         const headers = { Authorization: `${token}` };
-        const response = await axios.get(process.env.REACT_APP_API_URL, { headers });
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/shareHolder/dashBoard`, { headers });
         const apiData = response.data.data;
 
         const franchiseData = { name: "Franchise", growth: "buy", value: apiData.completedShareInfo[1]?.numberOfShare || "0" };
@@ -41,7 +41,7 @@ export default function Banner(props) {
     <Flex justify="center" align="center" minHeight="100vh">
       <Card p="16px" mb={{ base: "20px", lg: "20px" }} align="center" maxW="350px">
         <Box bg={`url(${banner})`} bgSize="cover" borderRadius="16px" h="200px" w="100%" />
-        <Avatar mx="auto" src={avatar} h="87px" w="87px" mt="-43px" border="4px solid" borderColor={borderColor} />
+        {/* <Avatar mx="auto" src={avatar} h="87px" w="87px" mt="-43px" border="4px solid" borderColor={borderColor} /> */}
         <Text color={textColorPrimary} fontWeight="bold" fontSize="xl" mt="10px">{name}</Text>
         <Text color={textColorSecondary} fontSize="sm">{job}</Text>
         <Flex w="100%" mx="auto" mt="26px" direction="column">

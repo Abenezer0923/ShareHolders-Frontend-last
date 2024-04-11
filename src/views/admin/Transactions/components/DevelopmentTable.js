@@ -328,14 +328,14 @@ export default function DevelopmentTable({ columnsData, tableData }) {
                     <div className="tm_invoice_info tm_mb25">
                       <div className="tm_card_note tm_mobile_hide">
                         <b className="tm_primary_color">Payment Method: </b>
-                        {certificateData.paymentMethod}
+                        {certificateData.original.paymentMethod}
                       </div>
                       <div className="tm_invoice_info_list tm_white_color">
                         <p className="tm_invoice_number tm_m0">
-                          Invoice No: <b>{certificateData.transaction_id}</b>
+                          Invoice No: <b>{certificateData.original.transaction_id}</b>
                         </p>
                         <p className="tm_invoice_date tm_m0">
-                          Date: <b>{formatDate(certificateData.createdAt)}</b>
+                          Date: <b>{formatDate(certificateData.original.createdAt)}</b>
                         </p>
                       </div>
                       <div className="tm_invoice_seperator tm_accent_bg"></div>
@@ -347,13 +347,13 @@ export default function DevelopmentTable({ columnsData, tableData }) {
                         </p>
                         <p>
                           status:
-                          {certificateData.status}
+                          {certificateData.original.status}
                           <br />
                           manual_receipt_issued:
-                          {certificateData.manual_receipt_issued}
+                          {certificateData.original.manual_receipt_issued}
                           <br />
                           paidAmount:
-                          {certificateData.paidAmount} birr
+                          {certificateData.original.paidAmount} birr
                           <br />
                         </p>
                       </div>
@@ -400,7 +400,7 @@ export default function DevelopmentTable({ columnsData, tableData }) {
                                 </td>
                                 <td className="tm_width_4">{res.info.email}</td>
                                 <td className="tm_width_2">
-                                  {certificateData.paidAmount}
+                                  {certificateData.original.paidAmount}
                                 </td>
                                 <td className="tm_width_1">{res.info.phone}</td>
                                 <td className="tm_width_2 tm_text_right">

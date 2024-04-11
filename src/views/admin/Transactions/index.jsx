@@ -24,10 +24,7 @@ export default function Settings() {
           Authorization: `${token}`,
         };
 
-        const response = await axios.get(
-          process.env.REACT_APP_API_URL,
-          { headers }
-        );
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/shareHolder/dashBoard`, { headers });
 
         const apiData = response.data.data;
         console.log("tr", apiData);

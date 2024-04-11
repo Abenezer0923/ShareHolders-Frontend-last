@@ -79,7 +79,7 @@ export default function TotalSpent(props) {
   const [paymentId, setPaymentId] = useState(null);
   const [isPaymentPendings, setIsPaymentPending] = useState(false);
   const [buttonPersent, setButtonPersent] = useState("");
-  const [buttonLabel, setButtonLabel] = useState("ORDINARY SHARE");
+  
   const [paymentMethod, setPaymentMethod] = useState("bankTransfer");
   const [restShare, setRestShare] = useState(true);
   const [checkboxChecked, setCheckboxChecked] = useState(false);
@@ -110,7 +110,7 @@ export default function TotalSpent(props) {
 
   const handlePercentageSelection = (percentage, amount) => {
     const Totalres = amount * 100;
-    const res = (percentage / 100) * Totalres;
+    const res = ((percentage / 100) * Totalres) + (0.05 * Totalres);
     setCalculatedAmount(res);
   };
   const handleAccountNumberChange = (event) => {
@@ -170,13 +170,6 @@ export default function TotalSpent(props) {
     }
   };
 
-  const calculateTotalCost = (selectedOption) => {
-    const percentage = parseFloat(selectedOption.replace("%", ""));
-    const Totalres = quantity * 100;
-    const cost = (percentage / 100) * Totalres;
-    // return isNaN(cost) ? 0 : cost.toFixed(2);
-    setCalculatedAmount(cost);
-  };
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -372,7 +365,7 @@ export default function TotalSpent(props) {
                     <Flex direction="column">
                       <Flex align="center" mb={{ base: "1rem", lg: "2rem" }}>
                         <Text color="#d7a022" fontSize="2xl" mr="3rem">
-                          Ordinary
+                          TSM
                         </Text>
                         <Box flex="1">
                           <Input

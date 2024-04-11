@@ -56,10 +56,8 @@ const UserReports = () => {
           Authorization: `${token}`,
         };
 
-        const response = await axios.get(
-          process.env.REACT_APP_API_URL,
-          { headers }
-        );
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/shareHolder/dashBoard`, { headers });
+
 
         const apiData = response.data.data;
         console.log("apis", apiData);
@@ -168,20 +166,21 @@ const UserReports = () => {
       <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap="20px" mb="20px">
         <TotalSpent />
         {/* <WeeklyRevenue /> */}
-        <CheckTable
+        {/* <CheckTable
           columnsData={columnsDataCheck}
           tableData={data.checkTableData}
-        />
+        /> */}
+         <YoutubeComplaxes
+            columnsData={columnsDataComplex}
+            tableData={tableDataComplex}
+          />
       </SimpleGrid>
       <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap="20px" mb="20px">
         {/* <ComplexTable
           columnsData={columnsDataComplex}
           tableData={tableDataComplex}
         /> */}
-        <YoutubeComplaxes
-            columnsData={columnsDataComplex}
-            tableData={tableDataComplex}
-          />
+       
         <History columnsData={columnsHistoryCheck} tableData={data.shareInfo} />
       </SimpleGrid>
       <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap="20px" mb="20px">
