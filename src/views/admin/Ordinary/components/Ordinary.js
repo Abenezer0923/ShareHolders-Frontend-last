@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 import {
   Box,
   Button,
@@ -24,6 +25,7 @@ import {
   ListItem,
   List,
   Spinner,
+
 } from "@chakra-ui/react";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -37,7 +39,6 @@ import {
   FiCamera,
 } from "react-icons/fi";
 
-import toast, { Toaster } from "react-hot-toast";
 import p1 from "assets/img/Untitled-removebg-preview.png";
 import p2 from "assets/img/tele.png";
 import p3 from "assets/img/Paypal.png";
@@ -55,14 +56,6 @@ export default function TotalSpent(props) {
   const [accountNumber, setAccountNumber] = useState("");
   const [paymentId, setPaymentId] = useState(null);
   const [shareHolderId, setShareHolderId] = useState(null);
-  // const [Persentagess, setThePersentage] = useState(null);
-  // const [uploadImage, setUploadImage] = useState(null);
-  // const [paymentOrders, setPaymentOrders] = useState([]);
-  // const [paymentOrderStatus, setpaymentOrderStatus] = useState("");
-  // const [uploadSuccess, setUploadSuccess] = useState(false);
-  // const [uploadedImage, setUploadedImage] = useState(null);
-  // const [shareCatagoryType, setshareCatagoryType] = useState("");
-
   const [uploadProgress, setUploadProgress] = useState(0); // Define uploadProgress
   const [selectedFile, setSelectedFile] = useState(null);
   const [isPaymentPending, setIsPaymentPending] = useState(false);
@@ -88,6 +81,7 @@ export default function TotalSpent(props) {
 
         const percentage = parseInt(apiData.currentPayment.percentage);
         const amount = apiData.currentPayment.amountSubscribed;
+        const TotalAmount = amount/100
         setSelectedPercentage(percentage);
         const remainingPercentage = 100 - percentage;
         const theIDss = apiData.currentPayment._id;
@@ -98,7 +92,7 @@ export default function TotalSpent(props) {
 
         const options = [];
         for (let i = 25; i <= remainingPercentage; i += 25) {
-          options.push({ value: i, label: `${i}%`, amount: amount });
+          options.push({ value: i, label: `${i}%`, amount: TotalAmount });
         }
         setDynamicOptions(options);
 
@@ -158,7 +152,7 @@ export default function TotalSpent(props) {
   };
 
   const handlePercentageSelection = (percentage, amount) => {
-    const Totalres = amount;
+    const Totalres = amount * 100;
     const res = (percentage / 100) * Totalres;
     setCalculatedAmount(res);
   };
@@ -176,39 +170,43 @@ export default function TotalSpent(props) {
     setAccountNumber(event.target.value);
   };
 
-    /*
+  /*
     Author :  Melak Sisay
     Logic  :  Initiating Telebirr Payment
-    Result :  Getting Redirected to Relebirr checkout page
+    Result :  Getting Redirected to Telebirr checkout page
   */
-    const handleTelebirrPay = async () => {
-      // Change this url to the deployed url on production
-      const telebirrPayUrl = "http://localhost:2024/api/payment/telebirr/pay";
-      axios
-        .post(telebirrPayUrl)
-        .then((data) => {
-          
-          if(data.data.data.code==200){
-            // Show Toast Message for the user
-            toast.success("Redirecting to trelebirr checkout page");
-            setTimeout(() => {
-              // console.log({data,code:data.data.data.code,dataum:data.data.data.data,url:data.data.data.data.toPayUrl})
-              // Redirect the user to a telebirr payment checkout
-              
-              window.location.href = data.data.data.data.toPayUrl;
-            }, 2000);
-          }else{
-            toast.error("Error while making a payment with telebirr,please try again !!!");
-          }
-          
-        })
-        .catch((error) => {
-          // Use a logger method on production to trigger the error happening for the user
-          console.log({ error });
-          // Toast an error message to the user
-          toast.error("Error while making a payment with telebirr");
-        });
+  const handleTelebirrPay = async () => {
+    // Change this url to the deployed url on production
+    const telebirrPayUrl = "http://localhost:2024/api/payment/telebirr/pay";
+
+    const datum = {
+      // Replace with the actual amount calculated
+      amount : 1
     }
+    axios
+      .post(telebirrPayUrl,datum)
+      .then((data) => {
+        if(data.data.data.code==200){
+          // Show Toast Message for the user
+          toast.success("Redirecting to trelebirr checkout page");
+          setTimeout(() => {
+            // console.log({data,code:data.data.data.code,dataum:data.data.data.data,url:data.data.data.data.toPayUrl})
+            // Redirect the user to a telebirr payment checkout
+            
+            window.location.href = data.data.data.data.toPayUrl;
+          }, 2000);
+        }else{
+          toast.error("Error while making a payment with telebirr,please try again !!!");
+        }
+        
+      })
+      .catch((error) => {
+        // Use a logger method on production to trigger the error happening for the user
+        console.log({ error });
+        // Toast an error message to the user
+        toast.error("Error while making a payment with telebirr");
+      });
+  }
 
   const handlePayButtonClick = async () => {
     try {
@@ -487,7 +485,6 @@ export default function TotalSpent(props) {
                     </PopoverBody>
                   </PopoverContent>
                 </Popover>
-                
 
                 <Box w={{ base: "100%", lg: "250px" }} mr="0rem">
                   <Input
@@ -499,8 +496,10 @@ export default function TotalSpent(props) {
                     onChange={handleAccountNumberChange}
                   />
                 </Box>
+              </>
+            )}
 
-                <Flex>
+            <Flex>
               <input
                 type="file"
                 accept="image/*"
@@ -528,10 +527,6 @@ export default function TotalSpent(props) {
                 />
               )}
             </Flex>
-              </>
-            )}
-
-            
 
             <Flex mt={{ base: "2rem", lg: "1rem" }}>
               <Button

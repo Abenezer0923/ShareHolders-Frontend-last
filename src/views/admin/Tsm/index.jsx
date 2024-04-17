@@ -41,7 +41,7 @@ export default function UserReports() {
 
         const apiData = response.data.data;
         console.log("Heyy Abeniiiiii", apiData.shareHolderInfo._id)
-        let newPaymentOrder = apiData.newPayment_Order;
+        let newPaymentOrder = apiData.payment_Order;
         if(newPaymentOrder === null){
           newPaymentOrder = false
 

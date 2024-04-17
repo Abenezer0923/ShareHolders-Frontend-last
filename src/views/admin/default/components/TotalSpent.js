@@ -134,12 +134,12 @@ export default function TotalSpent(props) {
         </Flex>
       </Flex>
       <Flex w="100%" flexDirection={{ base: "column", lg: "row" }}>
-      <Box minH="260px" minW="75%" mt="5rem">
+      <Box minH="260px" minW="75%" mt="3rem">
           {contentData.length > 0 ? (
             <Text me="auto" color={textColor} fontWeight="50" lineHeight="100%">
               
               {/* <Text>{contentData[currentIndex]?.body}</Text> */}
-              <Text style={{ fontWeight: "bold", fontSize:"2rem", marginTop:'3rem', marginLeft:'7rem'}}>Coming Soon.........!!!</Text>
+              <Text style={{  fontSize:"1rem", marginTop:'3rem', marginLeft:'0rem'}}>PurposeBlack is a brand new initiative launched in May 2020 by a group of more than 130 black experts. PurposeBlack, as the name suggests, aims to economically address some of the most pressing issues confronting Black people worldwide. </Text>
               <br />
               {/* <a href="#" style={{ fontWeight: "bold" }}>
                 Read More
@@ -158,7 +158,7 @@ export default function TotalSpent(props) {
         borderRadius="7px"
       >
         <Icon as={MdOutlineCalendarToday} color="#0000" me="4px" />
-        Date 26 / 07 | 2023 - 26 / 08 / 2023
+        PurposeBlack ETH
       </Button>
     </Card>
   );

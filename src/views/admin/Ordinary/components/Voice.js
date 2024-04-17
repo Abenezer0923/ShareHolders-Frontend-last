@@ -151,7 +151,7 @@ export default function TotalSpent(props) {
       formData.append("shareCatagory", "ordinary");
 
       const responseFromBack = await axios.post(
-        "http://localhost:2024/api/newPayment/newBankPayment",
+        "http://localhost:2024/api/orderPayment/bankPayment",
         formData,
         {
           headers: {

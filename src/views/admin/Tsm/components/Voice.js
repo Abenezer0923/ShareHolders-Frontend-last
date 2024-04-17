@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 // Chakra imports
 import {
@@ -122,6 +123,35 @@ export default function TotalSpent(props) {
     setPaymentMethod(value);
   };
 
+  const handleTelebirrPay = async () => {
+    // Change this url to the deployed url on production
+    const telebirrPayUrl = "http://localhost:2024/api/payment/telebirr/pay";
+    axios
+      .post(telebirrPayUrl)
+      .then((data) => {
+        if(data.data.data.code==200){
+          // Show Toast Message for the user
+          toast.success("Redirecting to trelebirr checkout page");
+          setTimeout(() => {
+            // console.log({data,code:data.data.data.code,dataum:data.data.data.data,url:data.data.data.data.toPayUrl})
+            // Redirect the user to a telebirr payment checkout
+            
+            window.location.href = data.data.data.data.toPayUrl;
+          }, 2000);
+        }else{
+          toast.error("Error while making a payment with telebirr,please try again !!!");
+        }
+        
+      })
+      .catch((error) => {
+        // Use a logger method on production to trigger the error happening for the user
+        console.log({ error });
+        // Toast an error message to the user
+        toast.error("Error while making a payment with telebirr");
+      });
+  }
+
+
 
 
 
@@ -151,7 +181,7 @@ export default function TotalSpent(props) {
       formData.append("shareCatagory", "tsm");
 
       const responseFromBack = await axios.post(
-        "http://localhost:2024/api/newPayment/newBankPayment",
+        "http://localhost:2024/api/orderPayment/bankPayment",
         formData,
         {
           headers: {
@@ -492,6 +522,62 @@ export default function TotalSpent(props) {
                             </Box>
                           </>
                         )}
+                        {paymentMethod === "creditCard" && (
+            <Flex justify="space-between" p={4}>
+              {/* Image 1 */}
+              {/* <Link href="" _hover={{ textDecor: "none" }}>
+                <Box
+                  as="img"
+                  src={p1}
+                  alt="Image 1"
+                  boxSize="100px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  cursor="pointer"
+                />
+              </Link> */}
+
+              {/* Image 2 */}
+              {/* <Button onClick={handleTelebirrPay}  */}
+              <Link  onClick={handleTelebirrPay}>
+              <Box
+                  as="img"
+                  src={p2}
+                  alt="Image 2"
+                  boxSize="100px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  cursor="pointer"/>
+
+              </Link>
+
+              {/* Image 3 */}
+              {/* <Link href="#" _hover={{ textDecor: "none" }}>
+                <Box
+                  as="img"
+                  src={p3}
+                  alt="Image 3"
+                  boxSize="100px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  cursor="pointer"
+                />
+              </Link> */}
+
+              {/* Image 4 */}
+              {/* <Link href="" _hover={{ textDecor: "none" }}>
+                <Box
+                  as="img"
+                  src={p4}
+                  alt="Image 4"
+                  boxSize="100px"
+                  objectFit="cover"
+                  borderRadius="md"
+                  cursor="pointer"
+                />
+              </Link> */}
+            </Flex>
+          )}
                       </Flex>
                       <Flex
                         direction="column"
